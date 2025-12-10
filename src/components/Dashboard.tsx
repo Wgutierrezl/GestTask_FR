@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, LogOut, Boxes, LayoutGrid, Users, Sparkles, Archive } from 'lucide-react';
-import type { Board, User, BoardMember } from '../App';
+import type { Board, BoardMember, User } from '../App';
 import { BoardView } from './BoardView';
 import { CreateBoardModal } from './CreateBoardModal';
+import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type DashboardProps = {
   user: User;

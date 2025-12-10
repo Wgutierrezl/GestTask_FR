@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { Dashboard } from './components/Dashboard';
+import type { UserInfo } from './functions/models/UserInfoDTO';
+import type { SessionDTO } from './functions/models/LoginDTO';
 
 export type User = {
   id: string;
@@ -11,6 +13,7 @@ export type User = {
   rol: 'admin' | 'miembro' | 'invitado';
   fechaRegistro: Date;
 };
+
 
 export type BoardMember = {
   userId: string;
@@ -82,60 +85,21 @@ type Page = 'login' | 'register' | 'dashboard';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('login');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([
-    { 
-      id: '1', 
-      correo: 'demo@gesttask.com', 
-      nombre: 'Ana García',
-      edad: 28,
-      rol: 'admin',
-      fechaRegistro: new Date('2024-01-15')
-    },
-    { 
-      id: '2', 
-      correo: 'carlos@gesttask.com', 
-      nombre: 'Carlos Méndez',
-      edad: 32,
-      rol: 'miembro',
-      fechaRegistro: new Date('2024-02-20')
-    },
-    { 
-      id: '3', 
-      correo: 'laura@gesttask.com', 
-      nombre: 'Laura Martínez',
-      edad: 26,
-      rol: 'miembro',
-      fechaRegistro: new Date('2024-03-10')
-    }
-  ]);
+  const [currentUser, setCurrentUser] = useState<SessionDTO | null>(null);
 
-  const handleLogin = (correo: string, password: string) => {
-    const user = users.find(u => u.correo === correo);
-    if (user) {
-      setCurrentUser(user);
-      setCurrentPage('dashboard');
-    } else {
-      alert('Usuario no encontrado. Intenta con demo@gesttask.com');
-    }
-  };
-
-  const handleRegister = (correo: string, password: string, nombre: string, edad: number, rol: 'admin' | 'miembro' | 'invitado') => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      correo,
-      nombre,
-      edad,
-      rol,
-      fechaRegistro: new Date()
-    };
-    setUsers([...users, newUser]);
-    setCurrentUser(newUser);
-    setCurrentPage('dashboard');
-  };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setCurrentPage('login');
+  };
+
+  const handleLoginSuccess = (user: SessionDTO) => {
+    setCurrentUser(user);
+    setCurrentPage('dashboard');
+  };
+
+  const handleRegisterSuccess = () => {
+    // Puedes mostrar un Swal aquí si quieres
     setCurrentPage('login');
   };
 
@@ -143,23 +107,23 @@ export default function App() {
     <div className="min-h-screen bg-[#fafafa]">
       {currentPage === 'login' && (
         <LoginPage 
-          onLogin={handleLogin}
+          onLogin={handleLoginSuccess}
           onNavigateToRegister={() => setCurrentPage('register')}
         />
       )}
       {currentPage === 'register' && (
-        <RegisterPage 
-          onRegister={handleRegister}
+        <RegisterPage
+          onRegister={handleRegisterSuccess}
           onNavigateToLogin={() => setCurrentPage('login')}
         />
       )}
-      {currentPage === 'dashboard' && currentUser && (
+      {/* {currentPage === 'dashboard' && currentUser && (
         <Dashboard 
           user={currentUser}
-          users={users}
+          users={UserInfo}
           onLogout={handleLogout}
         />
-      )}
+      )} */}
     </div>
   );
 }

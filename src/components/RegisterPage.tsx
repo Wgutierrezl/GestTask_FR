@@ -1,27 +1,54 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Boxes, Mail, Lock, User, Calendar, Shield, ArrowRight } from 'lucide-react';
+import type { UserCreate } from '../functions/models/UserInfoDTO';
+import { RegisterUser } from '../functions/user_functions/user';
+import Swal from 'sweetalert2';
 
 type RegisterPageProps = {
-  onRegister: (correo: string, password: string, nombre: string, edad: number, rol: 'admin' | 'miembro' | 'invitado') => void;
+  onRegister: (correo: string, password: string, nombre: string, edad: number, rol: 'usuario') => void;
   onNavigateToLogin: () => void;
 };
 
-export function RegisterPage({ onRegister, onNavigateToLogin }: RegisterPageProps) {
+export function RegisterPage({ onRegister,onNavigateToLogin }: RegisterPageProps) {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
   const [edad, setEdad] = useState('');
-  const [rol, setRol] = useState<'admin' | 'miembro' | 'invitado'>('miembro');
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const rol='usuario';
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const edadNum = parseInt(edad);
     if (edadNum < 18) {
       alert('Debes ser mayor de 18 años');
       return;
     }
-    onRegister(correo, password, nombre, edadNum, rol);
+
+    try{
+      const user : UserCreate={
+        nombre,
+        correo,
+        edad:edadNum,
+        contrasena:password,
+        rol
+      };
+
+      const result=await RegisterUser(user);
+      if(!result){
+        Swal.fire('informacion','no hemos logrado crear el usuario','info');
+        return ;
+      }
+
+      console.log(result);
+
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error}`,'error');
+      return;
+    }
+   
+    
+    
   };
 
   return (
@@ -134,7 +161,7 @@ export function RegisterPage({ onRegister, onNavigateToLogin }: RegisterPageProp
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm mb-2 text-slate-700">Rol</label>
               <div className="relative">
                 <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -148,7 +175,7 @@ export function RegisterPage({ onRegister, onNavigateToLogin }: RegisterPageProp
                   <option value="invitado">Invitado</option>
                 </select>
               </div>
-            </div>
+            </div> */}
 
             <button
               type="submit"

@@ -1,19 +1,41 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Boxes, Mail, Lock, ArrowRight } from 'lucide-react';
+import { LogUser } from '../functions/user_functions/user';
+import Swal from 'sweetalert2';
+import type { SessionDTO } from '../functions/models/LoginDTO';
 
 type LoginPageProps = {
-  onLogin: (correo: string, password: string) => void;
+  onLogin: (session:SessionDTO) => void;
   onNavigateToRegister: () => void;
 };
 
-export function LoginPage({ onLogin, onNavigateToRegister }: LoginPageProps) {
+export function LoginPage({ onLogin ,onNavigateToRegister }: LoginPageProps) {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(correo, password);
+    try{
+      const session=await LogUser({email:correo,password:password})
+      if(!session){
+        Swal.fire('error','usuario o contraseña incorrecta','error');
+        return ;
+      }
+
+      localStorage.setItem('userId',session.userId);
+      localStorage.setItem('rol',session.rol);
+      localStorage.setItem('token',session.token);
+      localStorage.setItem('nombre',session.nombre);
+
+      Swal.fire('Informacion','te has logeado correctamente','info');
+
+      onLogin(session);
+
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error}`);
+
+    }
   };
 
   return (
