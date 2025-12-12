@@ -17,3 +17,21 @@ export interface BoardUpdateDTO{
     nombre: string;
     descripcion: string;
 }
+
+
+//---------------------- HERE START THE MODELS TO BOARD MEMBERS ---------------------------
+
+
+export interface BoardMemberDTO{
+    tableroId: string;
+    usuarioId: string;
+    rol: string;
+}
+
+export interface BoardMemberInfoDTO{
+    id:string
+    fechaIngreso:Date;
+    tableroId: string;
+    usuarioId: string;
+    rol: string;
+}

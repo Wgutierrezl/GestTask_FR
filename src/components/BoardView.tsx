@@ -1,52 +1,58 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Plus, Boxes, Users, MoreVertical, Trash2, Archive, Workflow, Sparkles, UserCog, Eye } from 'lucide-react';
 import type { Board, User, Pipeline } from '../App';
 import { PipelineView } from './PipelineView';
 import { CreatePipelineModal } from './CreatePipelineModal';
 import { ManageMembersModal } from './ManageMembersModal';
+import type { pipelinesDTO } from '../functions/models/Pipeline_model';
+import { GetPipelinesByBoardId } from '../functions/pipelines_functions/pipeline.functions';
+import { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import Swal from 'sweetalert2';
+import { GetBoardsMemberByBoardId } from '../functions/board_members_functions/board_member_functions';
 
 type BoardViewProps = {
   boardId:string
+
 };
 
 export function BoardView({ boardId }: BoardViewProps) {
-  const [pipelines, setPipelines] = useState<Pipeline[]>([
-    {
-      id: '1',
-      nombre: 'Desarrollo Frontend',
-      descripcion: 'Pipeline para gestionar el desarrollo del frontend',
-      tableroId: board.id,
-      ownerId: user.id,
-      estado: 'activo',
-      etapas: [
-        { id: '1-1', nombre: 'Por Hacer', orden: 0 },
-        { id: '1-2', nombre: 'En Progreso', orden: 1 },
-        { id: '1-3', nombre: 'En Revisión', orden: 2 },
-        { id: '1-4', nombre: 'Completado', orden: 3 }
-      ],
-      fechaCreacion: new Date('2024-11-16')
-    },
-    {
-      id: '2',
-      nombre: 'Desarrollo Backend',
-      descripcion: 'Pipeline para la implementación del backend y APIs',
-      tableroId: board.id,
-      ownerId: user.id,
-      estado: 'activo',
-      etapas: [
-        { id: '2-1', nombre: 'Diseño', orden: 0 },
-        { id: '2-2', nombre: 'Implementación', orden: 1 },
-        { id: '2-3', nombre: 'Testing', orden: 2 },
-        { id: '2-4', nombre: 'Desplegado', orden: 3 }
-      ],
-      fechaCreacion: new Date('2024-11-17')
-    }
-  ]);
+  const [pipelines, setPipelines] = useState<pipelinesDTO[]>([]);
+  const [userRole,setUserRole] = useState<BoardMemberInfoDTO>();
+    
   const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showManageMembersModal, setShowManageMembersModal] = useState(false);
+
+  useEffect(()=> {
+    const fetchData=async()=>{
+      try{
+        const [pipeRes, rolRes]=await Promise.all([
+          GetPipelinesByBoardId(boardId),
+          GetBoardsMemberByBoardId(boardId)
+        ]);
+
+        setPipelines(pipeRes ?? []);
+        setUserRole(rolRes ?? undefined);
+
+
+        
+
+        if(response.length===0){
+          Swal.fire('error','aun no hay pipelines creados para este tablero','info');
+          return [];
+        }
+
+        setPipelines(response);
+
+      }catch(error:any){
+
+      }
+    }
+  })
+
+  
 
   const handleCreatePipeline = (nombre: string, descripcion: string, etapas: { nombre: string; orden: number }[]) => {
     const newPipeline: Pipeline = {
