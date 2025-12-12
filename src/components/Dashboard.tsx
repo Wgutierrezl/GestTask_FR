@@ -1,96 +1,70 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, LogOut, Boxes, LayoutGrid, Users, Sparkles, Archive } from 'lucide-react';
 import type { Board, BoardMember, User } from '../App';
 import { BoardView } from './BoardView';
 import { CreateBoardModal } from './CreateBoardModal';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
+import { GetMyBoards } from '../functions/board_functions/board.functions';
+import type { BoardInfoDTO } from '../functions/models/Board_model';
+import Swal from 'sweetalert2';
 
-type DashboardProps = {
-  user: User;
-  users: User[];
+type DashboardProps = {  
   onLogout: () => void;
 };
 
-export function Dashboard({ user, users, onLogout }: DashboardProps) {
-  const [boards, setBoards] = useState<Board[]>([
-    {
-      id: '1',
-      nombre: 'Proyecto Web Corporativo',
-      descripcion: 'Desarrollo completo del nuevo sitio web de la empresa',
-      ownerId: user.id,
-      miembros: [
-        { userId: user.id, role: 'owner', addedAt: new Date('2024-11-15') },
-        { userId: '2', role: 'miembro', addedAt: new Date('2024-11-16') },
-        { userId: '3', role: 'invitado', addedAt: new Date('2024-11-17') }
-      ],
-      estado: 'activo',
-      fechaCreacion: new Date('2024-11-15')
-    },
-    {
-      id: '2',
-      nombre: 'Marketing Digital Q1',
-      descripcion: 'Campañas y estrategias de marketing para el primer trimestre',
-      ownerId: user.id,
-      miembros: [
-        { userId: user.id, role: 'owner', addedAt: new Date('2024-11-20') },
-        { userId: '2', role: 'miembro', addedAt: new Date('2024-11-20') }
-      ],
-      estado: 'activo',
-      fechaCreacion: new Date('2024-11-20')
-    }
-  ]);
-  const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
+export function Dashboard({ onLogout }: DashboardProps) {
+  const [boards, setBoards] = useState<BoardInfoDTO[]>();
+  const [selectedBoard, setSelectedBoard] = useState<string>("");
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const handleCreateBoard = (nombre: string, descripcion: string, miembros: string[]) => {
-    const boardMembers: BoardMember[] = [
-      { userId: user.id, role: 'owner', addedAt: new Date() },
-      ...miembros.map(userId => ({
-        userId,
-        role: 'miembro' as const,
-        addedAt: new Date()
-      }))
-    ];
-    const newBoard: Board = {
-      id: Date.now().toString(),
-      nombre,
-      descripcion,
-      ownerId: user.id,
-      miembros: boardMembers,
-      estado: 'activo',
-      fechaCreacion: new Date()
-    };
-    setBoards([...boards, newBoard]);
-    setShowCreateModal(false);
-  };
+  useEffect(()=> {
+    const fetchData=async()=>{
+      try{
+        const response=await GetMyBoards();
+        if(!response){
+          setBoards([]);
+          return [];
+        }
+
+        if(!response || response.length===0){
+          Swal.fire('Informacion','Aun no tienes tableros creados','info');
+          setBoards([]);
+          return ;
+
+        }
+
+        setBoards(response);
+
+      }catch(error:any){
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error}`);
+        setBoards([]);
+        return [];
+      }
+    }
+
+    fetchData();
+  },[]);
+
 
   const handleDeleteBoard = (boardId: string) => {
-    setBoards(boards.filter(b => b.id !== boardId));
-    if (selectedBoard?.id === boardId) {
-      setSelectedBoard(null);
-    }
+      setSelectedBoard(boardId);
   };
 
-  const handleUpdateBoard = (updatedBoard: Board) => {
-    setBoards(boards.map(b => b.id === updatedBoard.id ? updatedBoard : b));
-    setSelectedBoard(updatedBoard);
+  const handleUpdateBoard = (boardId: string) => {
+    setSelectedBoard(boardId);
   };
 
   if (selectedBoard) {
     return (
       <BoardView
-        board={selectedBoard}
-        user={user}
-        users={users}
-        onBack={() => setSelectedBoard(null)}
-        onDeleteBoard={handleDeleteBoard}
-        onUpdateBoard={handleUpdateBoard}
+        boardId={selectedBoard}
+        
       />
     );
   }
 
-  const activeBoards = boards.filter(b => b.estado === 'activo');
+  const activeBoards = boards?.filter(b => b.estado === 'activo');
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
@@ -106,7 +80,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
                 <h1 className="text-lg bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                   GestTask
                 </h1>
-                <p className="text-xs text-slate-500">Hola, {user.nombre}</p>
+                {/* <p className="text-xs text-slate-500">Hola, {user.nombre}</p> */}
               </div>
             </div>
             <button
@@ -140,7 +114,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
               <div className="flex items-center gap-4 mt-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <LayoutGrid className="w-4 h-4" />
-                  <span>{activeBoards.length} tableros activos</span>
+                  <span>{activeBoards?.length} tableros activos</span>
                 </div>
               </div>
             </div>
@@ -155,7 +129,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
         </div>
 
         {/* Boards Grid */}
-        {activeBoards.length === 0 ? (
+        {activeBoards?.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -179,8 +153,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence>
-              {activeBoards.map((board, index) => {
-                const miembrosCount = board.miembros.length;
+              {activeBoards?.map((board, index) => {
                 return (
                   <motion.div
                     key={board.id}
@@ -188,7 +161,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => setSelectedBoard(board)}
+                    onClick={() => setSelectedBoard(board.id)}
                     className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all group"
                   >
                     {/* Header */}
@@ -215,9 +188,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
 
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-600">{miembrosCount} miembro{miembrosCount !== 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-2">  
                       </div>
                       <span className="text-xs text-slate-400">
                         {board.fechaCreacion.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
@@ -234,10 +205,7 @@ export function Dashboard({ user, users, onLogout }: DashboardProps) {
       {/* Create Board Modal */}
       {showCreateModal && (
         <CreateBoardModal
-          users={users}
-          currentUserId={user.id}
           onClose={() => setShowCreateModal(false)}
-          onCreate={handleCreateBoard}
         />
       )}
     </div>

@@ -2,33 +2,34 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { X, LayoutGrid, Users, Check } from 'lucide-react';
 import type { User } from '../App';
+import type { BoardCreate } from '../functions/models/Board_model';
+import { CreateBoard } from '../functions/board_functions/board.functions';
+import Swal from 'sweetalert2';
 
-type CreateBoardModalProps = {
-  users: User[];
-  currentUserId: string;
+interface Props {
   onClose: () => void;
-  onCreate: (nombre: string, descripcion: string, miembros: string[]) => void;
-};
+}
 
-export function CreateBoardModal({ users, currentUserId, onClose, onCreate }: CreateBoardModalProps) {
+export function CreateBoardModal({ onClose } : Props ) {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
-  const availableUsers = users.filter(u => u.id !== currentUserId);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (nombre.trim()) {
-      onCreate(nombre, descripcion, selectedMembers);
-    }
-  };
+    try{
+      const response=await CreateBoard({nombre, descripcion})
+      if(!response){
+        Swal.fire('Error','no hemos logrado crear el tablero','error');
+        return;
+      }
 
-  const toggleMember = (userId: string) => {
-    if (selectedMembers.includes(userId)) {
-      setSelectedMembers(selectedMembers.filter(id => id !== userId));
-    } else {
-      setSelectedMembers([...selectedMembers, userId]);
+      Swal.fire('Informacion','tablero creado correctamente','success');
+      onClose();
+
+    }catch(error:any){
+      Swal.fire('error','ha ocurrido un error inesperado','error');
+      return;
     }
   };
 
@@ -82,44 +83,6 @@ export function CreateBoardModal({ users, currentUserId, onClose, onCreate }: Cr
           </div>
 
           <div>
-            <label className="block text-sm mb-3 text-slate-700 flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Agregar Miembros (opcional)
-            </label>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {availableUsers.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">
-                  No hay otros usuarios disponibles
-                </p>
-              ) : (
-                availableUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    onClick={() => toggleMember(user.id)}
-                    className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${
-                      selectedMembers.includes(user.id)
-                        ? 'border-blue-300 bg-blue-50'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm">
-                        {user.nombre.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-900">{user.nombre}</p>
-                        <p className="text-xs text-slate-500">{user.correo}</p>
-                      </div>
-                    </div>
-                    {selectedMembers.includes(user.id) && (
-                      <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
           </div>
 
           {/* Actions */}

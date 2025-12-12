@@ -117,13 +117,11 @@ export default function App() {
           onNavigateToLogin={() => setCurrentPage('login')}
         />
       )}
-      {/* {currentPage === 'dashboard' && currentUser && (
+      {currentPage === 'dashboard' && currentUser && (
         <Dashboard 
-          user={currentUser}
-          users={UserInfo}
           onLogout={handleLogout}
         />
-      )} */}
+      )}
     </div>
   );
 }

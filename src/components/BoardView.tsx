@@ -7,15 +7,10 @@ import { CreatePipelineModal } from './CreatePipelineModal';
 import { ManageMembersModal } from './ManageMembersModal';
 
 type BoardViewProps = {
-  board: Board;
-  user: User;
-  users: User[];
-  onBack: () => void;
-  onDeleteBoard: (boardId: string) => void;
-  onUpdateBoard: (board: Board) => void;
+  boardId:string
 };
 
-export function BoardView({ board, user, users, onBack, onDeleteBoard, onUpdateBoard }: BoardViewProps) {
+export function BoardView({ boardId }: BoardViewProps) {
   const [pipelines, setPipelines] = useState<Pipeline[]>([
     {
       id: '1',
