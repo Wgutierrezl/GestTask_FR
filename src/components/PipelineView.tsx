@@ -7,11 +7,13 @@ import type { Pipeline, Board, User, Task } from '../App';
 import { StageColumn } from './StageColumn';
 import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
+import type { BoardInfoDTO } from '../functions/models/Board_model';
+import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type PipelineViewProps = {
   pipeline: Pipeline;
-  board: Board;
-  user: User;
+  board: BoardInfoDTO;
+  user: UserInfo;
   users: User[];
   onBack: () => void;
   onDeletePipeline: (pipelineId: string) => void;

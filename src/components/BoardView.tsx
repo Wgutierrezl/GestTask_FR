@@ -5,72 +5,74 @@ import type { Board, User, Pipeline } from '../App';
 import { PipelineView } from './PipelineView';
 import { CreatePipelineModal } from './CreatePipelineModal';
 import { ManageMembersModal } from './ManageMembersModal';
-import type { pipelinesDTO } from '../functions/models/Pipeline_model';
+import type { pipelinesDTO, PipelinesInfo } from '../functions/models/Pipeline_model';
 import { GetPipelinesByBoardId } from '../functions/pipelines_functions/pipeline.functions';
-import { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardInfoDTO, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import Swal from 'sweetalert2';
-import { GetBoardsMemberByBoardId } from '../functions/board_members_functions/board_member_functions';
+import { GetMembersBoardByBoardIdToken } from '../functions/board_members_functions/board_member_functions';
+import { CreatePipeline } from '../functions/pipelines_functions/pipeline.functions';
 
 type BoardViewProps = {
-  boardId:string
+  board:BoardInfoDTO
 
 };
 
-export function BoardView({ boardId }: BoardViewProps) {
-  const [pipelines, setPipelines] = useState<pipelinesDTO[]>([]);
-  const [userRole,setUserRole] = useState<BoardMemberInfoDTO>();
+export function BoardView({ board }: BoardViewProps) {
+  const [pipelines, setPipelines] = useState<PipelinesInfo[]>([]);
+  const [userRole, setUserRole] = useState<BoardMemberInfoDTO | undefined>(undefined);
     
-  const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
+  const [selectedPipeline, setSelectedPipeline] = useState<PipelinesInfo | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showManageMembersModal, setShowManageMembersModal] = useState(false);
 
-  useEffect(()=> {
-    const fetchData=async()=>{
-      try{
-        const [pipeRes, rolRes]=await Promise.all([
-          GetPipelinesByBoardId(boardId),
-          GetBoardsMemberByBoardId(boardId)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [pipeRes, rolRes] = await Promise.all([
+          GetPipelinesByBoardId(board.id),
+          GetMembersBoardByBoardIdToken(board.id)
         ]);
 
         setPipelines(pipeRes ?? []);
-        setUserRole(rolRes ?? undefined);
-
-
-        
-
-        if(response.length===0){
-          Swal.fire('error','aun no hay pipelines creados para este tablero','info');
-          return [];
+        if (rolRes) {
+          setUserRole(rolRes);
         }
-
-        setPipelines(response);
-
-      }catch(error:any){
-
+      } catch (error: any) {
+        console.error('Error fetching board data:', error);
       }
-    }
-  })
+    };
+    
+    fetchData();
+  }, [board]);
 
   
 
-  const handleCreatePipeline = (nombre: string, descripcion: string, etapas: { nombre: string; orden: number }[]) => {
-    const newPipeline: Pipeline = {
-      id: Date.now().toString(),
-      nombre,
-      descripcion,
-      tableroId: board.id,
-      ownerId: user.id,
-      estado: 'activo',
-      etapas: etapas.map((e, idx) => ({
-        id: `${Date.now()}-${idx}`,
-        nombre: e.nombre,
-        orden: e.orden
-      })),
-      fechaCreacion: new Date()
-    };
-    setPipelines([...pipelines, newPipeline]);
-    setShowCreateModal(false);
+  const handleCreatePipeline = async (nombre: string, descripcion: string, etapas: { nombre: string; orden: number }[]) => {
+    try{
+      const response=await CreatePipeline({nombre,
+          descripcion,
+          estado: "activo",
+          tableroId: board.id,
+          etapas: etapas
+      },board.id);
+
+      if(!response){
+        Swal.fire('error','No se pudo crear el pipeline','error');
+        return;
+      } 
+
+      Swal.fire('Exito','Pipeline creado correctamente','success');
+
+      setPipelines([...pipelines, response]);
+      setShowCreateModal(false);
+
+
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error}`,'error');
+      return;
+    }
+    
   };
 
   const handleDeletePipeline = (pipelineId: string) => {
@@ -85,35 +87,35 @@ export function BoardView({ boardId }: BoardViewProps) {
     setSelectedPipeline(updatedPipeline);
   };
 
-  const handleDeleteBoardClick = () => {
+  /* const handleDeleteBoardClick = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este tablero? Esta acción eliminará todos los pipelines y tareas.')) {
       onDeleteBoard(board.id);
     }
-  };
+  }; */
 
   // Get current user's role in the board
-  const currentUserRole = board.miembros.find(m => m.userId === user.id)?.role;
+  const currentUserRole = userRole?.rol ?? 'invitado';
   const canCreatePipeline = currentUserRole === 'owner' || currentUserRole === 'miembro';
   const canDelete = currentUserRole === 'owner';
   const canManageMembers = currentUserRole === 'owner';
 
-  const boardMemberIds = board.miembros.map(m => m.userId);
+  /* const boardMemberIds = board.miembros.map(m => m.userId);
   const boardMembers = users.filter(u => boardMemberIds.includes(u.id));
-  const activePipelines = pipelines.filter(p => p.estado === 'activo');
+  const activePipelines = pipelines.filter(p => p.estado === 'activo'); */
 
-  if (selectedPipeline) {
+  /* if (selectedPipeline) {
     return (
       <PipelineView
         pipeline={selectedPipeline}
         board={board}
         user={user}
-        users={users}
+        user={userRole?}
         onBack={() => setSelectedPipeline(null)}
         onDeletePipeline={handleDeletePipeline}
         onUpdatePipeline={handleUpdatePipeline}
       />
     );
-  }
+  } */
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
@@ -123,7 +125,7 @@ export function BoardView({ boardId }: BoardViewProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={onBack}
+                /* onClick={onBack} */
                 className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -155,31 +157,7 @@ export function BoardView({ boardId }: BoardViewProps) {
                 title={canManageMembers ? 'Gestionar miembros' : 'Ver miembros'}
               >
                 {canManageMembers ? <UserCog className="w-4 h-4 text-slate-600" /> : <Users className="w-4 h-4 text-slate-600" />}
-                <div className="flex -space-x-2">
-                  {boardMembers.slice(0, 3).map((member) => {
-                    const memberRole = board.miembros.find(m => m.userId === member.id)?.role;
-                    return (
-                      <div
-                        key={member.id}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs border-2 border-white ${
-                          memberRole === 'owner' 
-                            ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
-                            : memberRole === 'miembro'
-                            ? 'bg-gradient-to-br from-blue-500 to-indigo-500'
-                            : 'bg-gradient-to-br from-slate-400 to-slate-500'
-                        }`}
-                        title={`${member.nombre} (${memberRole === 'owner' ? 'Propietario' : memberRole === 'miembro' ? 'Miembro' : 'Invitado'})`}
-                      >
-                        {member.nombre.charAt(0).toUpperCase()}
-                      </div>
-                    );
-                  })}
-                  {boardMembers.length > 3 && (
-                    <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs border-2 border-white">
-                      +{boardMembers.length - 3}
-                    </div>
-                  )}
-                </div>
+                
                 {canManageMembers && <span className="text-sm text-slate-600">Gestionar</span>}
               </button>
               
@@ -210,10 +188,10 @@ export function BoardView({ boardId }: BoardViewProps) {
                     )}
                     {canDelete && (
                       <button
-                        onClick={() => {
+                        /* onClick={() => {
                           handleDeleteBoardClick();
                           setShowMenu(false);
-                        }}
+                        }} */
                         className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -248,7 +226,7 @@ export function BoardView({ boardId }: BoardViewProps) {
               <div className="flex items-center gap-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <Workflow className="w-4 h-4" />
-                  <span>{activePipelines.length} pipeline{activePipelines.length !== 1 ? 's' : ''} activo{activePipelines.length !== 1 ? 's' : ''}</span>
+                  <span>{pipelines.length} pipeline{pipelines.length !== 1 ? 's' : ''} activo{pipelines.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             </div>
@@ -270,7 +248,7 @@ export function BoardView({ boardId }: BoardViewProps) {
         </div>
 
         {/* Pipelines Grid */}
-        {activePipelines.length === 0 ? (
+        {pipelines.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -299,7 +277,7 @@ export function BoardView({ boardId }: BoardViewProps) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <AnimatePresence>
-              {activePipelines.map((pipeline, index) => (
+              {pipelines.map((pipeline, index) => (
                 <motion.div
                   key={pipeline.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -350,7 +328,7 @@ export function BoardView({ boardId }: BoardViewProps) {
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <span className="text-sm text-slate-600">{pipeline.etapas.length} etapa{pipeline.etapas.length !== 1 ? 's' : ''}</span>
                     <span className="text-xs text-slate-400">
-                      {pipeline.fechaCreacion.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                      {pipeline.fechaCreacion?.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                 </motion.div>
@@ -369,7 +347,7 @@ export function BoardView({ boardId }: BoardViewProps) {
       )}
 
       {/* Manage Members Modal */}
-      {showManageMembersModal && (
+      {/* {showManageMembersModal && (
         <ManageMembersModal
           board={board}
           users={users}
@@ -377,7 +355,7 @@ export function BoardView({ boardId }: BoardViewProps) {
           onClose={() => setShowManageMembersModal(false)}
           onUpdateBoard={onUpdateBoard}
         />
-      )}
+      )} */}
     </div>
   );
 }

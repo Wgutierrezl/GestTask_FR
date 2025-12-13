@@ -3,6 +3,12 @@ export interface EtapasDTO{
     orden:number
 }
 
+export interface EtapasInfoDTO{
+    id:string
+    nombre:string
+    orden:number
+}
+
 export interface pipelinesDTO{
     nombre:string
     descripcion: string
@@ -17,7 +23,8 @@ export interface PipelinesInfo{
     descripcion: string
     tableroId: string
     estado: string
-    etapas: EtapasDTO[]
+    etapas: EtapasInfoDTO[]
+    fechaCreacion?: Date
 }
 
 

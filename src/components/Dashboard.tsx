@@ -15,7 +15,7 @@ type DashboardProps = {
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [boards, setBoards] = useState<BoardInfoDTO[]>();
-  const [selectedBoard, setSelectedBoard] = useState<string>("");
+  const [selectedBoard, setSelectedBoard] = useState<BoardInfoDTO | undefined>();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(()=> {
@@ -47,19 +47,18 @@ export function Dashboard({ onLogout }: DashboardProps) {
   },[]);
 
 
-  const handleDeleteBoard = (boardId: string) => {
-      setSelectedBoard(boardId);
+  const handleDeleteBoard = (board: BoardInfoDTO) => {
+      setSelectedBoard(board);
   };
 
-  const handleUpdateBoard = (boardId: string) => {
-    setSelectedBoard(boardId);
+  const handleUpdateBoard = (board: BoardInfoDTO) => {
+    setSelectedBoard(board);
   };
 
   if (selectedBoard) {
     return (
       <BoardView
-        boardId={selectedBoard}
-        
+        board={selectedBoard}
       />
     );
   }
@@ -161,7 +160,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => setSelectedBoard(board.id)}
+                    onClick={() => setSelectedBoard(board)}
                     className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all group"
                   >
                     {/* Header */}

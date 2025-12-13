@@ -25,7 +25,19 @@ export async function GetPipelinesByBoardId(tableroId:string) : Promise<Pipeline
     try{
         const response=await api.get(`/api/pipelines/getPipelinesByBoardId/${tableroId}`);
         console.log(response.data);
-        return response.data;
+        return response.data.map((item:any) => ({
+            id: item._id,
+            nombre: item.nombre,
+            descripcion: item.descripcion,
+            tableroId: item.tableroId,
+            estado: item.estado,
+            etapas: item.etapas.map((etapa:any) => ({
+                id: etapa._id,
+                nombre: etapa.nombre,
+                orden: etapa.orden
+            })),
+            fechaCreacion: new Date(item.fechaCreacion)
+        }));
 
     }catch(error:any){
         Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
