@@ -3,22 +3,27 @@ import { motion } from 'motion/react';
 import { Plus, Eye } from 'lucide-react';
 import type { Stage, Task, User } from '../App';
 import { TaskCard } from './TaskCard';
+import type { TaskInfoDTO } from '../functions/models/Task_model';
+import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type StageColumnProps = {
   stage: Stage;
-  tasks: Task[];
-  users: User[];
+  tasks: TaskInfoDTO[];
+  user: UserInfo;
+  userRole: BoardMemberInfoDTO ;
   canAddTask?: boolean;
   canMoveTask?: boolean;
   onAddTask: () => void;
   onMoveTask: (taskId: string, newEtapaId: string) => void;
-  onTaskClick: (task: Task) => void;
+  onTaskClick: (task: TaskInfoDTO) => void;
 };
 
 export function StageColumn({ 
   stage, 
   tasks, 
-  users,
+  user,
+  userRole,
   canAddTask = true,
   canMoveTask = true,
   onAddTask, 
@@ -65,7 +70,8 @@ export function StageColumn({
             <TaskCard 
               key={task.id} 
               task={task} 
-              users={users}
+              user={user}
+              userRole={userRole}
               index={index}
               canDrag={canMoveTask}
               onClick={() => onTaskClick(task)}

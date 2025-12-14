@@ -6,6 +6,7 @@ import { BoardView } from './BoardView';
 import { CreateBoardModal } from './CreateBoardModal';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
 import { GetMyBoards } from '../functions/board_functions/board.functions';
+import { GetProfile } from '../functions/user_functions/user';
 import type { BoardInfoDTO } from '../functions/models/Board_model';
 import Swal from 'sweetalert2';
 
@@ -15,26 +16,33 @@ type DashboardProps = {
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [boards, setBoards] = useState<BoardInfoDTO[]>();
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [selectedBoard, setSelectedBoard] = useState<BoardInfoDTO | undefined>();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(()=> {
     const fetchData=async()=>{
       try{
-        const response=await GetMyBoards();
-        if(!response){
+        const [userProfile,boardRes] = await Promise.all([
+          GetProfile(),
+          GetMyBoards()
+        ]);
+
+        setUser(userProfile || null);
+
+        if(!boardRes){
           setBoards([]);
           return [];
         }
 
-        if(!response || response.length===0){
+        if(!boardRes || boardRes.length===0){
           Swal.fire('Informacion','Aun no tienes tableros creados','info');
           setBoards([]);
           return ;
 
         }
 
-        setBoards(response);
+        setBoards(boardRes);
 
       }catch(error:any){
         Swal.fire('Error',`ha ocurrido un error inesperado ${error}`);
@@ -59,6 +67,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     return (
       <BoardView
         board={selectedBoard}
+        user={user}
       />
     );
   }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Plus, Workflow, MoreVertical, Trash2, Boxes, Sparkles, Eye } from 'lucide-react';
 import { DndProvider } from 'react-dnd';
@@ -7,14 +7,19 @@ import type { Pipeline, Board, User, Task } from '../App';
 import { StageColumn } from './StageColumn';
 import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
-import type { BoardInfoDTO } from '../functions/models/Board_model';
+import type { BoardInfoDTO, BoardMemberDTO, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
+import type { PipelinesInfo } from '../functions/models/Pipeline_model';
+import { GetTasksByPipelineId } from '../functions/task_functions/task.functions';
+import Swal from 'sweetalert2';
+import { CreateTask } from '../functions/task_functions/task.functions';
+import type { TaskDTO, TaskInfoDTO } from '../functions/models/Task_model';
 
 type PipelineViewProps = {
-  pipeline: Pipeline;
+  pipeline: PipelinesInfo;
   board: BoardInfoDTO;
   user: UserInfo;
-  users: User[];
+  userRole: BoardMemberInfoDTO;
   onBack: () => void;
   onDeletePipeline: (pipelineId: string) => void;
   onUpdatePipeline: (pipeline: Pipeline) => void;
@@ -24,54 +29,45 @@ export function PipelineView({
   pipeline, 
   board, 
   user, 
-  users, 
+  userRole, 
   onBack, 
   onDeletePipeline,
   onUpdatePipeline 
 }: PipelineViewProps) {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      titulo: 'Diseñar página de inicio',
-      descripcion: 'Crear el diseño de la landing page con Figma',
-      pipelineId: pipeline.id,
-      etapaId: pipeline.etapas[0]?.id || '',
-      tableroId: board.id,
-      asignadoA: user.id,
-      prioridad: 'alta',
-      estado: 'en_progreso',
-      fechaLimite: new Date('2024-12-10'),
-      fechaCreacion: new Date('2024-11-25'),
-      comentarios: []
-    },
-    {
-      id: '2',
-      titulo: 'Implementar sistema de autenticación',
-      descripcion: 'Agregar login y registro con JWT',
-      pipelineId: pipeline.id,
-      etapaId: pipeline.etapas[1]?.id || '',
-      tableroId: board.id,
-      asignadoA: '2',
-      prioridad: 'media',
-      estado: 'en_progreso',
-      fechaLimite: new Date('2024-12-15'),
-      fechaCreacion: new Date('2024-11-26'),
-      comentarios: []
-    }
-  ]);
+  const [tasks, setTasks] = useState<TaskInfoDTO[]>([]);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskInfoDTO | null>(null);
   const [showMenu, setShowMenu] = useState(false);
 
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const response = await GetTasksByPipelineId(pipeline.id);
+
+      if(!response){
+        setTasks([]);
+        return;
+      }
+
+      if(response.length === 0){
+        Swal.fire('Informacion','No hay tareas en este pipeline','info');
+        setTasks([]);
+        return;
+      }
+      setTasks(response);
+    };
+    fetchTasks();
+
+  })
+
   // Get current user's role in the board
-  const currentUserRole = board.miembros.find(m => m.userId === user.id)?.role;
+  const currentUserRole = userRole.rol;
   const canCreateTask = currentUserRole === 'owner' || currentUserRole === 'miembro';
   const canMoveTask = currentUserRole === 'owner' || currentUserRole === 'miembro';
   const canDelete = currentUserRole === 'owner';
   const isReadOnly = currentUserRole === 'invitado';
 
-  const handleCreateTask = (
+  const handleCreateTask = async (
     titulo: string,
     descripcion: string,
     prioridad: 'baja' | 'media' | 'alta',
@@ -80,8 +76,7 @@ export function PipelineView({
   ) => {
     if (!selectedStageId || !canCreateTask) return;
 
-    const newTask: Task = {
-      id: Date.now().toString(),
+    const newTask: TaskDTO = {
       titulo,
       descripcion,
       pipelineId: pipeline.id,
@@ -89,13 +84,17 @@ export function PipelineView({
       tableroId: board.id,
       asignadoA,
       prioridad,
-      estado: 'pendiente',
-      fechaLimite,
-      fechaCreacion: new Date(),
-      comentarios: []
+      fechaLimite: fechaLimite || new Date(),
+      fechaFinalizacion: fechaLimite || new Date()
     };
 
-    setTasks([...tasks, newTask]);
+    const createdTask = await CreateTask(newTask, board.id);
+    if (!createdTask) {
+      Swal.fire('error','No se pudo crear la tarea','error');
+      return;
+    }
+
+    setTasks([...tasks, createdTask]);
     setShowCreateModal(false);
     setSelectedStageId(null);
   };
@@ -113,7 +112,7 @@ export function PipelineView({
     setSelectedTask(null);
   };
 
-  const handleUpdateTask = (updatedTask: Task) => {
+  const handleUpdateTask = (updatedTask: TaskInfoDTO) => {
     setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
   };
 
@@ -222,7 +221,8 @@ export function PipelineView({
                 key={stage.id}
                 stage={stage}
                 tasks={tasks.filter(t => t.etapaId === stage.id)}
-                users={users}
+                user={user}
+                userRole={userRole}
                 canAddTask={canCreateTask}
                 canMoveTask={canMoveTask}
                 onAddTask={() => {
@@ -241,8 +241,8 @@ export function PipelineView({
         {/* Create Task Modal */}
         {showCreateModal && selectedStageId && (
           <CreateTaskModal
-            users={users}
-            currentUserId={user.id}
+            user={userRole}
+            currentUserId={user._id}
             onClose={() => {
               setShowCreateModal(false);
               setSelectedStageId(null);
@@ -256,8 +256,8 @@ export function PipelineView({
           <TaskDetailModal
             task={selectedTask}
             pipeline={pipeline}
-            users={users}
-            currentUser={user}
+            user={userRole}
+            currentUser={userRole.usuarioId}
             onClose={() => setSelectedTask(null)}
             onDelete={handleDeleteTask}
             onUpdate={handleUpdateTask}

@@ -2,46 +2,49 @@ import { useDrag } from 'react-dnd';
 import { motion } from 'motion/react';
 import { GripVertical, Calendar, AlertCircle } from 'lucide-react';
 import type { Task, User } from '../App';
+import type { TaskInfoDTO } from '../functions/models/Task_model';
+import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type TaskCardProps = {
-  task: Task;
-  users: User[];
+  task: TaskInfoDTO;
+  user: UserInfo;
+  userRole: BoardMemberInfoDTO ;
   index: number;
   canDrag?: boolean;
   onClick: () => void;
 };
 
 const priorityConfig = {
-  baja: {
+  Baja: {
     bg: 'bg-green-50',
     text: 'text-green-700',
     border: 'border-green-200',
     dot: 'bg-green-500',
     label: 'Baja'
   },
-  media: {
+  Media: {
     bg: 'bg-yellow-50',
     text: 'text-yellow-700',
     border: 'border-yellow-200',
     dot: 'bg-yellow-500',
     label: 'Media'
   },
-  alta: {
+  Alta: {
     bg: 'bg-red-50',
     text: 'text-red-700',
     border: 'border-red-200',
     dot: 'bg-red-500',
     label: 'Alta'
   }
-};
+} as const;
 
 const estadoConfig = {
-  pendiente: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Pendiente' },
-  en_progreso: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'En Progreso' },
-  completada: { bg: 'bg-green-50', text: 'text-green-700', label: 'Completada' }
+  Inactivo: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Activo' },
+  Activo: { bg: 'bg-green-50', text: 'text-green-700', label: 'Inactivo' }
 };
 
-export function TaskCard({ task, users, index, canDrag = true, onClick }: TaskCardProps) {
+export function TaskCard({ task, user, userRole, index, canDrag = true, onClick }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'TASK',
     item: { id: task.id },
@@ -51,9 +54,14 @@ export function TaskCard({ task, users, index, canDrag = true, onClick }: TaskCa
     canDrag: canDrag
   }));
 
-  const assignedUser = users.find(u => u.id === task.asignadoA);
-  const priorityStyle = priorityConfig[task.prioridad];
-  const estadoStyle = estadoConfig[task.estado];
+  const assignedUser = userRole.usuarioId === task.asignadoA ? user : null;
+  const priorityKey =
+    (task.prioridad && task.prioridad in priorityConfig
+      ? task.prioridad
+      : 'Media') as keyof typeof priorityConfig;
+
+  const priorityStyle = priorityConfig[priorityKey];
+  const estadoStyle = estadoConfig[task.estado as keyof typeof estadoConfig];
 
   const isOverdue = task.fechaLimite && new Date(task.fechaLimite) < new Date() && task.estado !== 'completada';
 

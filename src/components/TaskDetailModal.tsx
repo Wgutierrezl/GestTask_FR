@@ -6,15 +6,18 @@ import {
   Paperclip, Send, Download, FileText, Image as ImageIcon, File
 } from 'lucide-react';
 import type { Task, Pipeline, User as UserType, Comment, CommentAttachment } from '../App';
+import type { PipelinesInfo } from '../functions/models/Pipeline_model';
+import type { TaskInfoDTO } from '../functions/models/Task_model';
+import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
 
 type TaskDetailModalProps = {
-  task: Task;
-  pipeline: Pipeline;
-  users: UserType[];
-  currentUser: UserType;
+  task: TaskInfoDTO;
+  pipeline: PipelinesInfo;
+  user: BoardMemberInfoDTO;
+  currentUser: string;
   onClose: () => void;
   onDelete: (taskId: string) => void;
-  onUpdate: (task: Task) => void;
+  onUpdate: (task: TaskInfoDTO) => void;
 };
 
 const priorityConfig = {
@@ -32,7 +35,7 @@ const estadoConfig = {
 export function TaskDetailModal({ 
   task, 
   pipeline, 
-  users, 
+  user, 
   currentUser, 
   onClose, 
   onDelete, 

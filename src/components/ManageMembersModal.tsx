@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, UserPlus, Crown, User as UserIcon, Eye, Shield, Trash2 } from 'lucide-react';
 import type { Board, User, BoardMember } from '../App';
+import type { BoardInfoDTO } from '../functions/models/Board_model';
 
 type ManageMembersModalProps = {
-  board: Board;
+  board: BoardInfoDTO;
   users: User[];
   currentUserId: string;
   onClose: () => void;

@@ -11,13 +11,14 @@ import type { BoardInfoDTO, BoardMemberInfoDTO } from '../functions/models/Board
 import Swal from 'sweetalert2';
 import { GetMembersBoardByBoardIdToken } from '../functions/board_members_functions/board_member_functions';
 import { CreatePipeline } from '../functions/pipelines_functions/pipeline.functions';
+import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type BoardViewProps = {
-  board:BoardInfoDTO
-
+  board:BoardInfoDTO,
+  user: UserInfo | null
 };
 
-export function BoardView({ board }: BoardViewProps) {
+export function BoardView({ board, user }: BoardViewProps) {
   const [pipelines, setPipelines] = useState<PipelinesInfo[]>([]);
   const [userRole, setUserRole] = useState<BoardMemberInfoDTO | undefined>(undefined);
     
@@ -103,19 +104,22 @@ export function BoardView({ board }: BoardViewProps) {
   const boardMembers = users.filter(u => boardMemberIds.includes(u.id));
   const activePipelines = pipelines.filter(p => p.estado === 'activo'); */
 
-  /* if (selectedPipeline) {
+  if (selectedPipeline) {
+    if (!user || !userRole) {
+        return null; // o un loader si quieres
+    }
     return (
       <PipelineView
         pipeline={selectedPipeline}
         board={board}
         user={user}
-        user={userRole?}
+        userRole={userRole}
         onBack={() => setSelectedPipeline(null)}
         onDeletePipeline={handleDeletePipeline}
         onUpdatePipeline={handleUpdatePipeline}
       />
     );
-  } */
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
