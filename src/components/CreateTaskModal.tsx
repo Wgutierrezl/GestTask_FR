@@ -1,28 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { X, CheckSquare, Calendar, User, AlertCircle } from 'lucide-react';
 import type { User as UserType } from '../App';
-import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 
 type CreateTaskModalProps = {
-  user: BoardMemberInfoDTO;
+  users: BoardMemberInfo[];
+  userRole: BoardMemberInfoDTO;
   currentUserId: string;
+
   onClose: () => void;
   onCreate: (
     titulo: string, 
     descripcion: string, 
-    prioridad: 'baja' | 'media' | 'alta',
+    prioridad: 'Baja' | 'Media' | 'Alta',
     asignadoA: string,
     fechaLimite?: Date
   ) => void;
 };
 
-export function CreateTaskModal({ users, currentUserId, onClose, onCreate }: CreateTaskModalProps) {
+export function CreateTaskModal({ users, userRole ,currentUserId, onClose, onCreate }: CreateTaskModalProps) {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [prioridad, setPrioridad] = useState<'baja' | 'media' | 'alta'>('media');
-  const [asignadoA, setAsignadoA] = useState(currentUserId);
+  const [prioridad, setPrioridad] = useState<'Baja' | 'Media' | 'Alta'>('Media');
+  const [asignadoA, setAsignadoA] = useState('');
   const [fechaLimite, setFechaLimite] = useState('');
+
+  useEffect(() => {
+    if (users.length === 1) {
+      setAsignadoA(users[0].usuarioId.id);
+    }
+  }, [users]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,9 +97,9 @@ export function CreateTaskModal({ users, currentUserId, onClose, onCreate }: Cre
             <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
-                onClick={() => setPrioridad('baja')}
+                onClick={() => setPrioridad('Baja')}
                 className={`px-4 py-3 rounded-xl border-2 transition-all text-sm ${
-                  prioridad === 'baja'
+                  prioridad === 'Baja'
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
@@ -100,9 +108,9 @@ export function CreateTaskModal({ users, currentUserId, onClose, onCreate }: Cre
               </button>
               <button
                 type="button"
-                onClick={() => setPrioridad('media')}
+                onClick={() => setPrioridad('Media')}
                 className={`px-4 py-3 rounded-xl border-2 transition-all text-sm ${
-                  prioridad === 'media'
+                  prioridad === 'Media'
                     ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
                     : 'border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
@@ -111,9 +119,9 @@ export function CreateTaskModal({ users, currentUserId, onClose, onCreate }: Cre
               </button>
               <button
                 type="button"
-                onClick={() => setPrioridad('alta')}
+                onClick={() => setPrioridad('Alta')}
                 className={`px-4 py-3 rounded-xl border-2 transition-all text-sm ${
-                  prioridad === 'alta'
+                  prioridad === 'Alta'
                     ? 'border-red-500 bg-red-50 text-red-700'
                     : 'border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
@@ -133,9 +141,12 @@ export function CreateTaskModal({ users, currentUserId, onClose, onCreate }: Cre
               onChange={(e) => setAsignadoA(e.target.value)}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none bg-white"
             >
+              <option value="" disabled>
+                Selecciona un usuario
+              </option>
               {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.nombre} {user.id === currentUserId ? '(Yo)' : ''}
+                <option key={user.usuarioId.id} value={user.usuarioId.id}>
+                  {user.usuarioId.nombre} {user.usuarioId.id === currentUserId ? '(Yo)' : ''}
                 </option>
               ))}
             </select>

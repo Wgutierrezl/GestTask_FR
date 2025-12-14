@@ -7,20 +7,24 @@ import { CreatePipelineModal } from './CreatePipelineModal';
 import { ManageMembersModal } from './ManageMembersModal';
 import type { pipelinesDTO, PipelinesInfo } from '../functions/models/Pipeline_model';
 import { GetPipelinesByBoardId } from '../functions/pipelines_functions/pipeline.functions';
-import type { BoardInfoDTO, BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardInfoDTO, BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import Swal from 'sweetalert2';
 import { GetMembersBoardByBoardIdToken } from '../functions/board_members_functions/board_member_functions';
 import { CreatePipeline } from '../functions/pipelines_functions/pipeline.functions';
+import { GetBoardsMemberByBoardId } from '../functions/board_members_functions/board_member_functions';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type BoardViewProps = {
   board:BoardInfoDTO,
   user: UserInfo | null
+  onBack: () => void;
 };
 
-export function BoardView({ board, user }: BoardViewProps) {
+export function BoardView({ board, user, onBack }: BoardViewProps) {
   const [pipelines, setPipelines] = useState<PipelinesInfo[]>([]);
   const [userRole, setUserRole] = useState<BoardMemberInfoDTO | undefined>(undefined);
+  const [userMembers, setUserMembers] = useState<BoardMemberInfo[]>([]);
+
     
   const [selectedPipeline, setSelectedPipeline] = useState<PipelinesInfo | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,15 +34,22 @@ export function BoardView({ board, user }: BoardViewProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pipeRes, rolRes] = await Promise.all([
+        const [pipeRes, rolRes, userMemberRes] = await Promise.all([
           GetPipelinesByBoardId(board.id),
-          GetMembersBoardByBoardIdToken(board.id)
+          GetMembersBoardByBoardIdToken(board.id),
+          GetBoardsMemberByBoardId(board.id)
+
         ]);
 
         setPipelines(pipeRes ?? []);
         if (rolRes) {
           setUserRole(rolRes);
         }
+
+        if(userMemberRes){
+          setUserMembers(userMemberRes);
+        }
+       
       } catch (error: any) {
         console.error('Error fetching board data:', error);
       }
@@ -114,6 +125,7 @@ export function BoardView({ board, user }: BoardViewProps) {
         board={board}
         user={user}
         userRole={userRole}
+        userMember={userMembers}
         onBack={() => setSelectedPipeline(null)}
         onDeletePipeline={handleDeletePipeline}
         onUpdatePipeline={handleUpdatePipeline}
@@ -129,7 +141,7 @@ export function BoardView({ board, user }: BoardViewProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                /* onClick={onBack} */
+                onClick={onBack}
                 className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
               >
                 <ArrowLeft className="w-5 h-5" />

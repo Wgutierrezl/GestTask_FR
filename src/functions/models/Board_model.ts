@@ -35,3 +35,17 @@ export interface BoardMemberInfoDTO{
     usuarioId: string;
     rol: string;
 }
+
+
+export interface BoardMemberInfo{
+    id:string
+    fechaIngreso:Date;
+    tableroId: string;
+    usuarioId: {
+        id:string;
+        nombre:string;
+        apellido:string;
+        email:string;
+    }
+    rol: string;
+}

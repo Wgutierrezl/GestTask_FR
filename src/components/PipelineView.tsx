@@ -7,7 +7,7 @@ import type { Pipeline, Board, User, Task } from '../App';
 import { StageColumn } from './StageColumn';
 import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
-import type { BoardInfoDTO, BoardMemberDTO, BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardInfoDTO, BoardMemberDTO, BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import { GetTasksByPipelineId } from '../functions/task_functions/task.functions';
@@ -20,6 +20,7 @@ type PipelineViewProps = {
   board: BoardInfoDTO;
   user: UserInfo;
   userRole: BoardMemberInfoDTO;
+  userMember: BoardMemberInfo[];
   onBack: () => void;
   onDeletePipeline: (pipelineId: string) => void;
   onUpdatePipeline: (pipeline: Pipeline) => void;
@@ -30,6 +31,7 @@ export function PipelineView({
   board, 
   user, 
   userRole, 
+  userMember,
   onBack, 
   onDeletePipeline,
   onUpdatePipeline 
@@ -58,7 +60,7 @@ export function PipelineView({
     };
     fetchTasks();
 
-  })
+  },[pipeline.id]);
 
   // Get current user's role in the board
   const currentUserRole = userRole.rol;
@@ -70,7 +72,7 @@ export function PipelineView({
   const handleCreateTask = async (
     titulo: string,
     descripcion: string,
-    prioridad: 'baja' | 'media' | 'alta',
+    prioridad: 'Baja' | 'Media' | 'Alta',
     asignadoA: string,
     fechaLimite?: Date
   ) => {
@@ -241,7 +243,8 @@ export function PipelineView({
         {/* Create Task Modal */}
         {showCreateModal && selectedStageId && (
           <CreateTaskModal
-            user={userRole}
+            users={userMember}
+            userRole={userRole}
             currentUserId={user._id}
             onClose={() => {
               setShowCreateModal(false);

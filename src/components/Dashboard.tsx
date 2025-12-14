@@ -68,6 +68,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       <BoardView
         board={selectedBoard}
         user={user}
+        onBack={() => setSelectedBoard(undefined)}
       />
     );
   }

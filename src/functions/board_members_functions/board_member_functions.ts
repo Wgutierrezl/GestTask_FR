@@ -1,14 +1,25 @@
 import api from "../ApiReutilizable";
 import Swal from "sweetalert2";
-import type { BoardInfoDTO, BoardMemberDTO, BoardMemberInfoDTO } from "../models/Board_model";
+import type { BoardInfoDTO, BoardMemberDTO, BoardMemberInfo, BoardMemberInfoDTO } from "../models/Board_model";
 
 
 //METHOD TO GET ALL USERS_MEMBERS BY BOARD ID
-export async function GetBoardsMemberByBoardId(boardId:string) : Promise<BoardInfoDTO | void> {
+export async function GetBoardsMemberByBoardId(boardId:string) : Promise<BoardMemberInfo[] | void> {
     try{
         const response=await api.get(`/api/boardMembers/getAllMemberByBoardId/${boardId}`);
         console.log(response.data);
-        return response.data;
+        return response.data.map((item:any) : BoardMemberInfo => ({
+            id: item._id,
+            fechaIngreso: new Date(item.fechaIngreso),
+            tableroId: item.tableroId,
+            usuarioId: {
+                id: item.usuarioId._id,
+                nombre: item.usuarioId.nombre,
+                apellido: item.usuarioId.apellido,
+                email: item.usuarioId.correo,
+            },
+            rol: item.rol
+        }));
 
     }catch(error:any){
         Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
