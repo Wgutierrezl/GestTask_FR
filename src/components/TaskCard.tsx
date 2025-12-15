@@ -40,8 +40,8 @@ const priorityConfig = {
 } as const;
 
 const estadoConfig = {
-  Inactivo: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Activo' },
-  Activo: { bg: 'bg-green-50', text: 'text-green-700', label: 'Inactivo' }
+  Inactivo: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Inactivo' },
+  Activo: { bg: 'bg-green-50', text: 'text-green-700', label: 'Activo' }
 };
 
 export function TaskCard({ task, user, userRole, index, canDrag = true, onClick }: TaskCardProps) {
@@ -63,7 +63,7 @@ export function TaskCard({ task, user, userRole, index, canDrag = true, onClick 
   const priorityStyle = priorityConfig[priorityKey];
   const estadoStyle = estadoConfig[task.estado as keyof typeof estadoConfig];
 
-  const isOverdue = task.fechaLimite && new Date(task.fechaLimite) < new Date() && task.estado !== 'completada';
+  const isOverdue = task.fechaLimite && new Date(task.fechaLimite) < new Date() && task.estado !== 'Inactivo';
 
   return (
     <motion.div

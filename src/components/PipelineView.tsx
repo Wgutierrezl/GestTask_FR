@@ -258,8 +258,9 @@ export function PipelineView({
         {selectedTask && (
           <TaskDetailModal
             task={selectedTask}
+            boardId={board.id}
             pipeline={pipeline}
-            user={userRole}
+            users={userMember}
             currentUser={userRole.usuarioId.id}
             onClose={() => setSelectedTask(null)}
             onDelete={handleDeleteTask}

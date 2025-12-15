@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   X, Trash2, Calendar, User, AlertCircle, Clock, 
@@ -9,33 +9,44 @@ import type { Task, Pipeline, User as UserType, Comment, CommentAttachment } fro
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
 import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
+import { GetCommentsByTaskId } from '../functions/comments_functions/comments.functions';
+import { AddComment } from '../functions/comments_functions/comments.functions';
+import type { CommentInfo, CreateCommentDTO, FileInputDTO } from '../functions/models/comment_model';
+import Swal from 'sweetalert2';
 
 type TaskDetailModalProps = {
   task: TaskInfoDTO;
+  boardId: string; 
   pipeline: PipelinesInfo;
-  user: BoardMemberInfo;
+  users: BoardMemberInfo[];
   currentUser: string;
   onClose: () => void;
   onDelete: (taskId: string) => void;
   onUpdate: (task: TaskInfoDTO) => void;
 };
 
-const priorityConfig = {
-  baja: { color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: 'Baja', icon: '🟢' },
-  media: { color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200', label: 'Media', icon: '🟡' },
-  alta: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Alta', icon: '🔴' }
+const priorityConfig: Record<'Baja' | 'Media' | 'Alta', {
+  color: string;
+  bg: string;
+  border: string;
+  label: string;
+  icon: string;
+}> = {
+  Baja: { color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: 'Baja', icon: '🟢' },
+  Media:{ color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200', label: 'Media', icon: '🟡' },
+  Alta: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Alta', icon: '🔴' }
 };
 
 const estadoConfig = {
-  pendiente: { color: 'text-slate-600', bg: 'bg-slate-50', label: 'Pendiente' },
-  en_progreso: { color: 'text-blue-600', bg: 'bg-blue-50', label: 'En Progreso' },
-  completada: { color: 'text-green-600', bg: 'bg-green-50', label: 'Completada' }
+  Inactivo: { color: 'text-slate-600', bg: 'bg-slate-50', label: 'Inactivo' },
+  Activo: { color: 'text-green-600', bg: 'bg-green-50', label: 'Activo' }
 };
 
 export function TaskDetailModal({ 
   task, 
+  boardId,
   pipeline, 
-  user, 
+  users, 
   currentUser, 
   onClose, 
   onDelete, 
@@ -50,18 +61,45 @@ export function TaskDetailModal({
   const [editedFechaLimite, setEditedFechaLimite] = useState(
     task.fechaLimite ? new Date(task.fechaLimite).toISOString().split('T')[0] : ''
   );
+  const [comments, setComments] = useState<CommentInfo[]>([]);
 
   // Comment state
   const [newComment, setNewComment] = useState('');
-  const [attachments, setAttachments] = useState<CommentAttachment[]>([]);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 
-  const assignedUser = users.find(u => u.id === task.asignadoA);
+  const assignedUser = users.find(u => u.usuarioId.id === task.asignadoA);
   const currentStage = pipeline.etapas.find(e => e.id === task.etapaId);
-  const priorityStyle = priorityConfig[task.prioridad];
-  const estadoStyle = estadoConfig[task.estado];
+  const priorityStyle = priorityConfig[task.prioridad] ?? priorityConfig.Baja;
+  const estadoStyle = estadoConfig[task.estado] ?? estadoConfig.Inactivo;
 
-  const handleSaveEdit = () => {
+  useEffect(()=> {
+    const fetchComments = async () => {
+      try{
+        const fetchedComments = await GetCommentsByTaskId(task.id);
+        if (!fetchedComments) {
+          setComments([]);
+          return;
+        } 
+
+        if(fetchedComments.length===0){
+          setComments([]);
+          return ;
+        }
+
+        setComments(fetchedComments);
+
+      }catch(error: any){
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`,'error');
+        setComments([]);
+        return;
+      }
+    }
+    fetchComments();
+
+  },[task.id]);
+
+  /* const handleSaveEdit = () => {
     const updatedTask: Task = {
       ...task,
       titulo: editedTitulo,
@@ -70,21 +108,21 @@ export function TaskDetailModal({
       estado: editedEstado,
       asignadoA: editedAsignadoA,
       fechaLimite: editedFechaLimite ? new Date(editedFechaLimite) : undefined,
-      fechaFinalizacion: editedEstado === 'completada' && task.estado !== 'completada' 
+      fechaFinalizacion: editedEstado === 'Inactivo' && task.estado !== 'Inactivo' 
         ? new Date() 
         : task.fechaFinalizacion
     };
     onUpdate(updatedTask);
     setIsEditing(false);
-  };
+  }; */
 
-  const handleDelete = () => {
+  /* const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
       onDelete(task.id);
     }
-  };
+  }; */
 
-  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
@@ -111,40 +149,43 @@ export function TaskDetailModal({
 
     // Reset input
     e.target.value = '';
+  }; */
+
+  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+      if (!files) return;
+
+      setAttachments((prev) => [...prev, ...Array.from(files)]);
+      e.target.value = '';
   };
 
-  const handleRemoveAttachment = (attachmentId: string) => {
+  /* const handleRemoveAttachment = (attachmentId: string) => {
     setAttachments(prev => prev.filter(a => a.id !== attachmentId));
-  };
+  }; */
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim() && attachments.length === 0) return;
 
-    const comment: Comment = {
-      id: Date.now().toString(),
-      taskId: task.id,
-      userId: currentUser.id,
-      texto: newComment,
-      adjuntos: attachments,
-      fechaCreacion: new Date()
+    const dto: CreateCommentDTO = {
+      tareaId: task.id,
+      mensaje: newComment,
+      archivos: attachments
     };
 
-    const updatedTask: Task = {
-      ...task,
-      comentarios: [...task.comentarios, comment]
-    };
+    try {
+      const savedComment = await AddComment(dto, boardId);
 
-    onUpdate(updatedTask);
-    setNewComment('');
-    setAttachments([]);
+      if (savedComment) {
+        setComments((prev) => [...prev, savedComment]);
+      }
+
+      setNewComment('');
+      setAttachments([]);
+    } catch (error) {
+      Swal.fire("Error", "Hubo un problema al agregar el comentario.", "error");
+    }
   };
-
-  const getFileIcon = (tipo: string) => {
-    if (tipo.startsWith('image/')) return <ImageIcon className="w-4 h-4" />;
-    if (tipo.includes('pdf')) return <FileText className="w-4 h-4" />;
-    return <File className="w-4 h-4" />;
-  };
-
+  
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -183,7 +224,7 @@ export function TaskDetailModal({
               </button>
             )}
             <button
-              onClick={handleDelete}
+              /* onClick={handleDelete} */
               className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"
               title="Eliminar"
             >
@@ -242,15 +283,15 @@ export function TaskDetailModal({
               {isEditing ? (
                 <select
                   value={editedPrioridad}
-                  onChange={(e) => setEditedPrioridad(e.target.value as 'baja' | 'media' | 'alta')}
+                  onChange={(e) => setEditedPrioridad(e.target.value as 'Baja' | 'Media' | 'Alta')}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                 >
-                  <option value="baja">🟢 Baja</option>
-                  <option value="media">🟡 Media</option>
-                  <option value="alta">🔴 Alta</option>
+                  <option value="Baja">🟢 Baja</option>
+                  <option value="Media">🟡 Media</option>
+                  <option value="Alta">🔴 Alta</option>
                 </select>
               ) : (
-                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${priorityStyle.bg} ${priorityStyle.color} border ${priorityStyle.border}`}>
+                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm  ${priorityStyle.color} border ${priorityStyle.border}`}>
                   {priorityStyle.icon} {priorityStyle.label}
                 </span>
               )}
@@ -265,12 +306,11 @@ export function TaskDetailModal({
               {isEditing ? (
                 <select
                   value={editedEstado}
-                  onChange={(e) => setEditedEstado(e.target.value as 'pendiente' | 'en_progreso' | 'completada')}
+                  onChange={(e) => setEditedEstado(e.target.value as 'Inactivo' | 'Activo')}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                 >
-                  <option value="pendiente">Pendiente</option>
-                  <option value="en_progreso">En Progreso</option>
-                  <option value="completada">Completada</option>
+                  <option value="Inactivo">Inactivo</option>
+                  <option value="Activo">Activo</option>
                 </select>
               ) : (
                 <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm ${estadoStyle.bg} ${estadoStyle.color}`}>
@@ -293,8 +333,8 @@ export function TaskDetailModal({
                 >
                   <option value="">Sin asignar</option>
                   {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.nombre}
+                    <option key={user.usuarioId.id} value={user.usuarioId.id}>
+                      {user.usuarioId.nombre}
                     </option>
                   ))}
                 </select>
@@ -302,9 +342,9 @@ export function TaskDetailModal({
                 assignedUser ? (
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm">
-                      {assignedUser.nombre.charAt(0).toUpperCase()}
+                      {assignedUser.usuarioId.id.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm text-slate-900">{assignedUser.nombre}</span>
+                    <span className="text-sm text-slate-900">{assignedUser.usuarioId.nombre}</span>
                   </div>
                 ) : (
                   <span className="text-sm text-slate-500">Sin asignar</span>
@@ -349,7 +389,7 @@ export function TaskDetailModal({
                 <span>Fecha de creación</span>
               </div>
               <p className="text-sm text-slate-700">
-                {task.fechaCreacion.toLocaleDateString('es-ES', { 
+                {task.fechaLimite.toLocaleDateString('es-ES', { 
                   day: 'numeric', 
                   month: 'long',
                   year: 'numeric',
@@ -395,7 +435,7 @@ export function TaskDetailModal({
                 Cancelar
               </button>
               <button
-                onClick={handleSaveEdit}
+                /* onClick={handleSaveEdit} */
                 className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
               >
                 <Check className="w-4 h-4" />
@@ -410,15 +450,15 @@ export function TaskDetailModal({
               <MessageSquare className="w-5 h-5 text-blue-600" />
               <h3 className="text-base text-slate-900">Comentarios</h3>
               <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs">
-                {task.comentarios.length}
+                {comments.length}
               </span>
             </div>
 
             {/* Existing Comments */}
-            {task.comentarios.length > 0 && (
+            {comments.length > 0 && (
               <div className="space-y-3 mb-4">
-                {task.comentarios.map((comment) => {
-                  const commentUser = users.find(u => u.id === comment.userId);
+                {comments.map((comment) => {
+                  const commentUser = users.find(u => u.usuarioId.id === comment.usuario.id);
                   return (
                     <motion.div
                       key={comment.id}
@@ -428,38 +468,38 @@ export function TaskDetailModal({
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm flex-shrink-0">
-                          {commentUser?.nombre.charAt(0).toUpperCase() || 'U'}
+                          {commentUser?.usuarioId.nombre.charAt(0).toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm text-slate-900">{commentUser?.nombre || 'Usuario'}</span>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-sm text-slate-900">{commentUser?.usuarioId.nombre || 'Usuario'}</span>
+                            {/* <span className="text-xs text-slate-500">
                               {comment.fechaCreacion.toLocaleDateString('es-ES', { 
                                 day: 'numeric', 
                                 month: 'short',
                                 hour: '2-digit',
                                 minute: '2-digit'
                               })}
-                            </span>
+                            </span> */}
                           </div>
-                          {comment.texto && (
-                            <p className="text-sm text-slate-600 whitespace-pre-wrap">{comment.texto}</p>
+                          {comment.mensaje && (
+                            <p className="text-sm text-slate-600 whitespace-pre-wrap">{comment.mensaje}</p>
                           )}
                           
                           {/* Comment Attachments */}
-                          {comment.adjuntos.length > 0 && (
+                          {comment.archivos && comment.archivos.length > 0 && (
                             <div className="mt-3 space-y-2">
-                              {comment.adjuntos.map((attachment) => (
+                              {comment.archivos.map((attachment) => (
                                 <div
                                   key={attachment.id}
                                   className="flex items-center gap-2 bg-white rounded-lg p-2 border border-slate-200 hover:border-blue-300 transition-all group"
                                 >
-                                  <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-lg">
-                                    {getFileIcon(attachment.tipo)}
-                                  </div>
+                                  {/* <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-lg">
+                                    {getFileIcon(attachment.url)}
+                                  </div> */}
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm text-slate-900 truncate">{attachment.nombre}</p>
-                                    <p className="text-xs text-slate-500">{formatFileSize(attachment.tamaño)}</p>
+                                    {/* <p className="text-xs text-slate-500">{formatFileSize(attachment.)}</p> */}
                                   </div>
                                   <a
                                     href={attachment.url}
@@ -485,7 +525,7 @@ export function TaskDetailModal({
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-sm flex-shrink-0">
-                  {currentUser.nombre.charAt(0).toUpperCase()}
+                  {currentUser.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
                   <textarea
@@ -506,18 +546,18 @@ export function TaskDetailModal({
                     <div className="mt-2 space-y-2">
                       {attachments.map((attachment) => (
                         <div
-                          key={attachment.id}
+                          key={attachment.name}
                           className="flex items-center gap-2 bg-blue-50 rounded-lg p-2 border border-blue-200"
                         >
                           <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-                            {getFileIcon(attachment.tipo)}
+                            {/* {getFileIcon(attachment.tipo)} */}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-slate-900 truncate">{attachment.nombre}</p>
-                            <p className="text-xs text-slate-500">{formatFileSize(attachment.tamaño)}</p>
+                            <p className="text-sm text-slate-900 truncate">{attachment.name}</p>
+                            <p className="text-xs text-slate-500">{formatFileSize(attachment.size)}</p>
                           </div>
                           <button
-                            onClick={() => handleRemoveAttachment(attachment.id)}
+                            /* onClick={() => handleRemoveAttachment(attachment.id)} */
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             title="Eliminar"
                           >

@@ -1,3 +1,7 @@
+export type Prioridad = 'Baja' | 'Media' | 'Alta';
+export type Estado = 'Inactivo' | 'Activo';
+
+
 export interface TaskDTO{
     titulo:string
     descripcion: string
@@ -18,8 +22,8 @@ export interface TaskInfoDTO{
     pipelineId: string
     etapaId: string
     asignadoA: string
-    prioridad: string
-    estado: string
+    prioridad: Prioridad
+    estado: Estado
     fechaLimite: Date
     fechaFinalizacion: Date;
 }
