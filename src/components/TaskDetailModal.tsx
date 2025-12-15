@@ -8,12 +8,12 @@ import {
 import type { Task, Pipeline, User as UserType, Comment, CommentAttachment } from '../App';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
-import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 
 type TaskDetailModalProps = {
   task: TaskInfoDTO;
   pipeline: PipelinesInfo;
-  user: BoardMemberInfoDTO;
+  user: BoardMemberInfo;
   currentUser: string;
   onClose: () => void;
   onDelete: (taskId: string) => void;

@@ -1,67 +1,143 @@
-import { useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, UserPlus, Crown, User as UserIcon, Eye, Shield, Trash2 } from 'lucide-react';
 import type { Board, User, BoardMember } from '../App';
-import type { BoardInfoDTO } from '../functions/models/Board_model';
+import type { BoardInfoDTO, BoardMemberDTO, BoardMemberInfo } from '../functions/models/Board_model';
+import { GetAllUsers } from '../functions/user_functions/user';
+import { AddBoardMember, 
+GetBoardsMemberByBoardId, 
+ChangeRoleBoardMember, 
+RemoveBoardMember } from '../functions/board_members_functions/board_member_functions';
+import type { UserInfo } from '../functions/models/UserInfoDTO';
+import Swal from 'sweetalert2';
+import { b } from 'framer-motion/client';
 
 type ManageMembersModalProps = {
   board: BoardInfoDTO;
-  users: User[];
+  userRole?: BoardMemberInfo;
   currentUserId: string;
   onClose: () => void;
-  onUpdateBoard: (board: Board) => void;
+  /* onUpdateBoard: (board: Board) => void; */
 };
 
-export function ManageMembersModal({ board, users, currentUserId, onClose, onUpdateBoard }: ManageMembersModalProps) {
+export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /* onUpdateBoard */ }: ManageMembersModalProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<'miembro' | 'invitado'>('miembro');
+  const [users, setUsers] = useState<UserInfo[]>([]);
+  const [usersMembers,setUsersMembers]=useState<BoardMemberInfo[]>([]);
 
-  const currentUserRole = board.miembros.find(m => m.userId === currentUserId)?.role;
+  useEffect(()=> {
+    const fetchUsers = async () => {
+      try{
+        const [userRes,memberRes]=await Promise.all([
+          GetAllUsers(),
+          GetBoardsMemberByBoardId(board.id)
+        ]);
+
+        setUsers(userRes ?? []);
+        setUsersMembers(memberRes ?? []);
+
+      }catch(error:any){
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+        setUsers([]);
+        setUsersMembers([]);
+        return;
+
+      }
+    }
+    fetchUsers();
+  },[]);
+
+
+
+  const currentUserRole = userRole?.rol;
   const isOwner = currentUserRole === 'owner';
 
-  const boardMemberIds = board.miembros.map(m => m.userId);
-  const availableUsers = users.filter(u => !boardMemberIds.includes(u.id));
+  /* const availableUsers = users.filter(u => !boardMemberIds.includes(u.id)); */
 
-  const handleAddMember = () => {
+  const handleAddMember = async () => {
     if (!selectedUserId || !isOwner) return;
+      try{
+          const newMember: BoardMemberDTO = {
+            tableroId: board.id,
+            usuarioId: selectedUserId,
+            rol: selectedRole ?? 'miembro'
+          };
 
-    const newMember: BoardMember = {
-      userId: selectedUserId,
-      role: selectedRole,
-      addedAt: new Date()
-    };
+          const memberCreated=await AddBoardMember(newMember);
+          if(!memberCreated){
+            Swal.fire('Error','No se pudo agregar el miembro al tablero','error');
+            return;
+          }
 
-    const updatedBoard = {
-      ...board,
-      miembros: [...board.miembros, newMember]
-    };
+          /* const updatedBoard = {
+          ...board,
+          miembros: [...board.miembros, newMember]
+          };
 
-    onUpdateBoard(updatedBoard);
-    setSelectedUserId('');
-  };
+          onUpdateBoard(updatedBoard);
+          setSelectedUserId(''); */
 
-  const handleRemoveMember = (userId: string) => {
-    if (!isOwner || userId === board.ownerId) return;
+        }catch(error:any){
+          Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+          return ;
+        }
+    
+      };
 
-    const updatedBoard = {
+  const handleRemoveMember = async (id: string) => {
+    if (!isOwner /* || userId === board.ownerId */) return;
+
+    try{
+      const response=await RemoveBoardMember(id,board.id);
+      if(!response){
+        Swal.fire('Error','No se pudo remover el miembro del tablero','error');
+        return;
+      }
+
+      Swal.fire('Exito','Miembro removido del tablero','success');
+
+    }catch(error:any){
+      Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+      return ;
+    }
+
+    /* const updatedBoard = {
       ...board,
       miembros: board.miembros.filter(m => m.userId !== userId)
     };
 
-    onUpdateBoard(updatedBoard);
+    onUpdateBoard(updatedBoard); */
   };
 
-  const handleChangeRole = (userId: string, newRole: 'owner' | 'miembro' | 'invitado') => {
-    if (!isOwner || userId === board.ownerId) return;
+  const handleChangeRole = async (dataUser: BoardMemberInfo, newRole: 'owner' | 'miembro' | 'invitado') => {
+    if (!isOwner /* || userId === board.ownerId */) return;
+    try{
+      const boardM: BoardMemberDTO = {
+        tableroId: board.id,
+        usuarioId: dataUser.usuarioId.id,
+        rol: newRole
+      };
 
-    const updatedBoard = {
+      const response=await ChangeRoleBoardMember(dataUser.id, boardM);
+      if(!response){
+        Swal.fire('Error','No se pudo cambiar el rol del miembro','error');
+        return;
+      }
+      Swal.fire('Exito','Rol del miembro actualizado','success');
+
+    }catch(error:any){
+      Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+      return ;
+    }
+    /* const updatedBoard = {
       ...board,
       miembros: board.miembros.map(m =>
         m.userId === userId ? { ...m, role: newRole } : m
       )
     };
 
-    onUpdateBoard(updatedBoard);
+    onUpdateBoard(updatedBoard); */
   };
 
   const getRoleIcon = (role: 'owner' | 'miembro' | 'invitado') => {
@@ -122,7 +198,7 @@ export function ManageMembersModal({ board, users, currentUserId, onClose, onUpd
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
           {/* Add Member Section - Only visible for owners */}
-          {isOwner && availableUsers.length > 0 && (
+          {isOwner && users.length > 0 && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <div className="flex items-center gap-2 mb-3">
                 <UserPlus className="w-5 h-5 text-blue-600" />
@@ -135,8 +211,8 @@ export function ManageMembersModal({ board, users, currentUserId, onClose, onUpd
                   className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Seleccionar usuario...</option>
-                  {availableUsers.map(user => (
-                    <option key={user.id} value={user.id}>
+                  {users.map(user => (
+                    <option key={user._id} value={user._id}>
                       {user.nombre} ({user.correo})
                     </option>
                   ))}
@@ -164,19 +240,19 @@ export function ManageMembersModal({ board, users, currentUserId, onClose, onUpd
           <div>
             <h3 className="text-slate-900 mb-3 flex items-center gap-2">
               <Shield className="w-5 h-5 text-slate-600" />
-              Miembros Actuales ({board.miembros.length})
+              Miembros Actuales ({usersMembers.length})
             </h3>
             <div className="space-y-2">
-              {board.miembros.map((member) => {
-                const user = users.find(u => u.id === member.userId);
+              {usersMembers.map((member) => {
+                const user = users.find(u => u._id === member.usuarioId.id);
                 if (!user) return null;
 
-                const isCurrentUser = member.userId === currentUserId;
-                const isBoardOwner = member.userId === board.ownerId;
+                const isCurrentUser = member.usuarioId.id === currentUserId;
+                const isBoardOwner = member.usuarioId.id === board.ownerId;
 
                 return (
                   <div
-                    key={member.userId}
+                    key={member.usuarioId.id}
                     className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-slate-300 transition-all"
                   >
                     <div className="flex items-center justify-between">
@@ -199,24 +275,24 @@ export function ManageMembersModal({ board, users, currentUserId, onClose, onUpd
                         {/* Role Selector or Badge */}
                         {isOwner && !isBoardOwner ? (
                           <select
-                            value={member.role}
-                            onChange={(e) => handleChangeRole(member.userId, e.target.value as 'owner' | 'miembro' | 'invitado')}
-                            className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-1.5 ${getRoleBadgeStyle(member.role)}`}
+                            value={member.rol}
+                            onChange={(e) => handleChangeRole(member, e.target.value as 'owner' | 'miembro' | 'invitado')}
+                            className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-1.5 ${getRoleBadgeStyle(member.rol as 'owner' | 'miembro' | 'invitado')}`}
                           >
                             <option value="miembro">Miembro</option>
                             <option value="invitado">Invitado</option>
                           </select>
                         ) : (
-                          <div className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-1.5 ${getRoleBadgeStyle(member.role)}`}>
-                            {getRoleIcon(member.role)}
-                            <span>{getRoleLabel(member.role)}</span>
+                          <div className={`px-3 py-1.5 rounded-lg text-xs border flex items-center gap-1.5 ${getRoleBadgeStyle(member.rol as 'owner' | 'miembro' | 'invitado')}`}>
+                            {getRoleIcon(member.rol as 'owner' | 'miembro' | 'invitado')}
+                            <span>{getRoleLabel(member.rol as 'owner' | 'miembro' | 'invitado')}</span>
                           </div>
                         )}
 
                         {/* Remove Button - Only for owners, can't remove self or board owner */}
                         {isOwner && !isBoardOwner && !isCurrentUser && (
                           <button
-                            onClick={() => handleRemoveMember(member.userId)}
+                            onClick={() => handleRemoveMember(member.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             title="Remover miembro"
                           >

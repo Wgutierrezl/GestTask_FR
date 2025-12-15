@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { X, CheckSquare, Calendar, User, AlertCircle } from 'lucide-react';
-import type { User as UserType } from '../App';
+import type { Board, User as UserType } from '../App';
 import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 
 type CreateTaskModalProps = {
   users: BoardMemberInfo[];
-  userRole: BoardMemberInfoDTO;
+  userRole: BoardMemberInfo ;
   currentUserId: string;
 
   onClose: () => void;

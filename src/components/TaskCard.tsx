@@ -3,13 +3,13 @@ import { motion } from 'motion/react';
 import { GripVertical, Calendar, AlertCircle } from 'lucide-react';
 import type { Task, User } from '../App';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
-import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type TaskCardProps = {
   task: TaskInfoDTO;
   user: UserInfo;
-  userRole: BoardMemberInfoDTO ;
+  userRole: BoardMemberInfo ;
   index: number;
   canDrag?: boolean;
   onClick: () => void;
@@ -54,7 +54,7 @@ export function TaskCard({ task, user, userRole, index, canDrag = true, onClick 
     canDrag: canDrag
   }));
 
-  const assignedUser = userRole.usuarioId === task.asignadoA ? user : null;
+  const assignedUser = userRole.usuarioId.id === task.asignadoA ? user : null;
   const priorityKey =
     (task.prioridad && task.prioridad in priorityConfig
       ? task.prioridad

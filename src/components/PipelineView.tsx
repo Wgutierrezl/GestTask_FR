@@ -19,7 +19,7 @@ type PipelineViewProps = {
   pipeline: PipelinesInfo;
   board: BoardInfoDTO;
   user: UserInfo;
-  userRole: BoardMemberInfoDTO;
+  userRole: BoardMemberInfo;
   userMember: BoardMemberInfo[];
   onBack: () => void;
   onDeletePipeline: (pipelineId: string) => void;
@@ -260,7 +260,7 @@ export function PipelineView({
             task={selectedTask}
             pipeline={pipeline}
             user={userRole}
-            currentUser={userRole.usuarioId}
+            currentUser={userRole.usuarioId.id}
             onClose={() => setSelectedTask(null)}
             onDelete={handleDeleteTask}
             onUpdate={handleUpdateTask}

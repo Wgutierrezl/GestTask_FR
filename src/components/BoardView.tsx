@@ -22,7 +22,7 @@ type BoardViewProps = {
 
 export function BoardView({ board, user, onBack }: BoardViewProps) {
   const [pipelines, setPipelines] = useState<PipelinesInfo[]>([]);
-  const [userRole, setUserRole] = useState<BoardMemberInfoDTO | undefined>(undefined);
+  const [userRole, setUserRole] = useState<BoardMemberInfo | undefined>(undefined);
   const [userMembers, setUserMembers] = useState<BoardMemberInfo[]>([]);
 
     
@@ -363,15 +363,15 @@ export function BoardView({ board, user, onBack }: BoardViewProps) {
       )}
 
       {/* Manage Members Modal */}
-      {/* {showManageMembersModal && (
+      {showManageMembersModal && userRole && (
         <ManageMembersModal
           board={board}
-          users={users}
-          currentUserId={user.id}
+          userRole={userRole ?? undefined}
+          currentUserId={user?._id ?? ''}
           onClose={() => setShowManageMembersModal(false)}
-          onUpdateBoard={onUpdateBoard}
+          /* onUpdateBoard={onUpdateBoard} */
         />
-      )} */}
+      )}
     </div>
   );
 }

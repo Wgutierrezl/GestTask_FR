@@ -29,7 +29,7 @@ export async function GetBoardsMemberByBoardId(boardId:string) : Promise<BoardMe
 }
 
 //METHOD TO GET BOARD_MEMBER BY BOARD ID AND USER ID INTO THE TOKEN
-export async function GetMembersBoardByBoardIdToken(boardId:string) : Promise<BoardMemberInfoDTO | void> {
+export async function GetMembersBoardByBoardIdToken(boardId:string) : Promise<BoardMemberInfo | void> {
     try{
         const response=await api.get(`/api/boardMembers/getMemberByBoardIdAndUser/${boardId}`);
         console.log(response.data);
@@ -38,7 +38,12 @@ export async function GetMembersBoardByBoardIdToken(boardId:string) : Promise<Bo
             id: item._id,
             fechaIngreso: new Date(item.fechaIngreso),
             tableroId: item.tableroId,
-            usuarioId: item.usuarioId,
+            usuarioId: {
+                id: item.usuarioId._id,
+                nombre: item.usuarioId.nombre,
+                apellido: item.usuarioId.apellido,
+                email: item.usuarioId.correo,
+            },
             rol: item.rol
         };
 
@@ -60,4 +65,30 @@ export async function AddBoardMember(data:BoardMemberDTO) : Promise<BoardInfoDTO
         return ;
     }
     
+}
+
+
+//METHOD TO REMOVE MEMBER FROM A BOARD
+export async function RemoveBoardMember(id:string, boardId:string) : Promise<BoardInfoDTO | void> {
+    try{
+        const response=await api.delete(`/api/boardMembers/deleteBoardMemberById/${id}/boardId/${boardId}`);
+        console.log(response.data);
+        return response.data;
+    }catch(error:any){
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+        return ;
+    }
+}
+
+
+//METHOD TO CHANGE ROLE OF A BOARD MEMBER
+export async function ChangeRoleBoardMember(id:string, data: BoardMemberDTO) : Promise<BoardInfoDTO | void> {
+    try{
+        const response=await api.put(`/api/boardMembers/updateBoardMemberById/${id}`,data);
+        console.log(response.data);
+        return response.data;
+    }catch(error:any){
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+        return ;
+    }   
 }

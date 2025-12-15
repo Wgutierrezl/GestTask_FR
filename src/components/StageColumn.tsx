@@ -4,14 +4,14 @@ import { Plus, Eye } from 'lucide-react';
 import type { Stage, Task, User } from '../App';
 import { TaskCard } from './TaskCard';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
-import type { BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
 
 type StageColumnProps = {
   stage: Stage;
   tasks: TaskInfoDTO[];
   user: UserInfo;
-  userRole: BoardMemberInfoDTO ;
+  userRole: BoardMemberInfo ;
   canAddTask?: boolean;
   canMoveTask?: boolean;
   onAddTask: () => void;
