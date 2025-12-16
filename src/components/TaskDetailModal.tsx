@@ -5,6 +5,7 @@ import {
   Edit2, Check, Workflow, CheckSquare, Flag, MessageSquare,
   Paperclip, Send, Download, FileText, Image as ImageIcon, File
 } from 'lucide-react';
+import { File as FileIcon } from 'lucide-react';
 import type { Task, Pipeline, User as UserType, Comment, CommentAttachment } from '../App';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
@@ -176,7 +177,13 @@ export function TaskDetailModal({
       const savedComment = await AddComment(dto, boardId);
 
       if (savedComment) {
-        setComments((prev) => [...prev, savedComment]);
+        setComments(prev => [
+          ...prev,
+          {
+            ...savedComment,
+            id: savedComment.id
+          }
+        ]);
       }
 
       setNewComment('');
@@ -544,9 +551,9 @@ export function TaskDetailModal({
                   {/* Pending Attachments */}
                   {attachments.length > 0 && (
                     <div className="mt-2 space-y-2">
-                      {attachments.map((attachment) => (
+                      {attachments.map((attachment,index) => (
                         <div
-                          key={attachment.name}
+                          key={`${attachment.name}-${index}`}
                           className="flex items-center gap-2 bg-blue-50 rounded-lg p-2 border border-blue-200"
                         >
                           <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">

@@ -27,8 +27,8 @@ export interface CommentInfo{
     usuario: {
         id: string;
         nombre: string;
-        apellido: string;
         email: string;
+        rol: string;
     }
     mensaje: string;
     archivos?: FilesDTO[]
