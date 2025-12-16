@@ -3,8 +3,9 @@ import { motion } from 'motion/react';
 import { 
   X, Trash2, Calendar, User, AlertCircle, Clock, 
   Edit2, Check, Workflow, CheckSquare, Flag, MessageSquare,
-  Paperclip, Send, Download, FileText, Image as ImageIcon, File
+  Paperclip, Send, Download, FileText, Image as ImageIcon
 } from 'lucide-react';
+import { useRef } from 'react';
 import { File as FileIcon } from 'lucide-react';
 import type { Task, Pipeline, User as UserType, Comment, CommentAttachment } from '../App';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
@@ -43,6 +44,8 @@ const estadoConfig = {
   Activo: { color: 'text-green-600', bg: 'bg-green-50', label: 'Activo' }
 };
 
+
+
 export function TaskDetailModal({ 
   task, 
   boardId,
@@ -73,6 +76,8 @@ export function TaskDetailModal({
   const currentStage = pipeline.etapas.find(e => e.id === task.etapaId);
   const priorityStyle = priorityConfig[task.prioridad] ?? priorityConfig.Baja;
   const estadoStyle = estadoConfig[task.estado] ?? estadoConfig.Inactivo;
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(()=> {
     const fetchComments = async () => {
@@ -153,11 +158,15 @@ export function TaskDetailModal({
   }; */
 
   const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-      if (!files) return;
+    if (!e.target.files) return;
 
-      setAttachments((prev) => [...prev, ...Array.from(files)]);
-      e.target.value = '';
+    // 🔥 CLON REAL
+    const selectedFiles = Array.from(e.target.files);
+
+    setAttachments(prev => [...prev, ...selectedFiles]);
+
+    // limpiar input DESPUÉS
+    e.target.value = '';
   };
 
   /* const handleRemoveAttachment = (attachmentId: string) => {
@@ -579,20 +588,21 @@ export function TaskDetailModal({
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-2">
                       <input
+                        ref={fileInputRef}
                         type="file"
                         multiple
                         onChange={handleFileAttachment}
                         className="hidden"
-                        id="commentFileInput"
                         accept="image/*,.pdf,.doc,.docx,.txt"
                       />
-                      <label
-                        htmlFor="commentFileInput"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg cursor-pointer transition-all"
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
                       >
                         <Paperclip className="w-4 h-4" />
                         <span>Adjuntar archivo</span>
-                      </label>
+                      </button>
                       {isUploadingFiles && (
                         <span className="text-xs text-slate-500">Cargando...</span>
                       )}

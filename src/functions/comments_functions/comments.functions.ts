@@ -19,11 +19,7 @@ export async function AddComment(data:CreateCommentDTO, boardId: string) : Promi
                 }
             });
         }
-        const response = await api.post( `/api/comments/createComment/boardId/${boardId}`, formData,{
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
+        const response = await api.post( `/api/comments/createComment/boardId/${boardId}`, formData);
         console.log(response.data)
         return {
             id: response.data._id,
