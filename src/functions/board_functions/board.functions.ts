@@ -37,3 +37,20 @@ export async function GetMyBoards() : Promise<BoardInfoDTO[] | void> {
     }
     
 }
+
+//METHOD TO DELETE A BOARD BY ID
+export async function DeleteBoardById(boardId:string) : Promise<boolean> {
+    try{
+        const response=await api.delete(`/api/boards/deleteBoardById/${boardId}`);
+        return response.status === 204;
+
+    }catch(error:any){
+        const status = error.response?.status;
+        if (status === 404) {
+            Swal.fire('Error','Tablero no encontrado');
+            return false;
+        }
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+        return false;
+    }
+}

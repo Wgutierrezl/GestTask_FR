@@ -19,7 +19,6 @@ export async function CreatePipeline(data:pipelinesDTO, tableroId:string) : Prom
     
 }
 
-
 //METHOD TO GET ALL PIPELINES BY BOARD ID
 export async function GetPipelinesByBoardId(tableroId:string) : Promise<PipelinesInfo[] | void> {
     try{
@@ -42,6 +41,25 @@ export async function GetPipelinesByBoardId(tableroId:string) : Promise<Pipeline
     }catch(error:any){
         Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
         return ;
+    }
+    
+}
+
+//METHOD TO DELETE A PIPELINE BY ID
+export async function DeletePipelineById(pipelineId:string, boardId:string) : Promise<boolean> {
+    try{
+        const response=await api.delete(`/api/pipelines/deletePipelinesById/${pipelineId}/boardId/${boardId}`);
+        return response.status === 204;
+
+    }catch(error:any){
+        const status = error.response?.status;
+        if (status === 404) {
+            Swal.fire('error','Pipeline no encontrado','error');
+            return false;
+        } else {
+            Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
+            return false;
+        }
     }
     
 }

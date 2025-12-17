@@ -14,6 +14,7 @@ import { GetTasksByPipelineId } from '../functions/task_functions/task.functions
 import Swal from 'sweetalert2';
 import { CreateTask } from '../functions/task_functions/task.functions';
 import type { TaskDTO, TaskInfoDTO } from '../functions/models/Task_model';
+import { DeletePipelineById } from '../functions/pipelines_functions/pipeline.functions';
 
 type PipelineViewProps = {
   pipeline: PipelinesInfo;
@@ -119,10 +120,31 @@ export function PipelineView({
     setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
   };
 
-  const handleDeletePipelineClick = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este pipeline? Esta acción eliminará todas las tareas.')) {
-      onDeletePipeline(pipeline.id);
+  const handleDeletePipelineClick = async () => {
+    const result=await Swal.fire({
+      title: '¿Estás seguro de que quieres eliminar este pipeline?',
+      text: 'Esta acción eliminará todas las tareas asociadas.',  
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if(result.isConfirmed){
+      const success = await DeletePipelineById(pipeline.id, board.id);
+      if (success) {
+        Swal.fire('Eliminado','El pipeline ha sido eliminado.','success');
+        onDeletePipeline(pipeline.id);
+      }
+
+      return;
     }
+
+    /* if (window.confirm('¿Estás seguro de que quieres eliminar este pipeline? Esta acción eliminará todas las tareas.')) {
+      onDeletePipeline(pipeline.id);
+    } */
   };
 
   const sortedStages = [...pipeline.etapas].sort((a, b) => a.orden - b.orden);

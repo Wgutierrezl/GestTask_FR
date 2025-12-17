@@ -13,6 +13,7 @@ import { GetMembersBoardByBoardIdToken } from '../functions/board_members_functi
 import { CreatePipeline } from '../functions/pipelines_functions/pipeline.functions';
 import { GetBoardsMemberByBoardId } from '../functions/board_members_functions/board_member_functions';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
+import { DeleteBoardById } from '../functions/board_functions/board.functions';
 
 type BoardViewProps = {
   board:BoardInfoDTO,
@@ -99,11 +100,38 @@ export function BoardView({ board, user, onBack }: BoardViewProps) {
     setSelectedPipeline(updatedPipeline);
   };
 
-  /* const handleDeleteBoardClick = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este tablero? Esta acción eliminará todos los pipelines y tareas.')) {
-      onDeleteBoard(board.id);
+  const handleDeleteBoardClick = async () => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro de que quieres eliminar este tablero?',
+      text: 'Esta acción eliminará todos los pipelines y tareas asociadas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if(result.isConfirmed){
+      try{
+        const response=await DeleteBoardById(board.id);
+        if(response){
+          Swal.fire('Éxito','El tablero ha sido eliminado correctamente','success');
+          /* onDeleteboard(board.id); */
+          onBack();
+        }
+
+
+      }catch(error:any){
+        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
+        return ;
+      }
     }
-  }; */
+
+    /* if (window.confirm('¿Estás seguro de que quieres eliminar este tablero? Esta acción eliminará todos los pipelines y tareas.')) {
+      onDeleteBoard(board.id);
+    } */
+  };
 
   // Get current user's role in the board
   const currentUserRole = userRole?.rol ?? 'invitado';
@@ -204,10 +232,10 @@ export function BoardView({ board, user, onBack }: BoardViewProps) {
                     )}
                     {canDelete && (
                       <button
-                        /* onClick={() => {
+                        onClick={() => {
                           handleDeleteBoardClick();
                           setShowMenu(false);
-                        }} */
+                        }}
                         className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm"
                       >
                         <Trash2 className="w-4 h-4" />
