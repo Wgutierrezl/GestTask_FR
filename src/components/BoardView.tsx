@@ -19,9 +19,10 @@ type BoardViewProps = {
   board:BoardInfoDTO,
   user: UserInfo | null
   onBack: () => void;
+  onDeleteboard: (boardId: string) => void;
 };
 
-export function BoardView({ board, user, onBack }: BoardViewProps) {
+export function BoardView({ board, user, onBack, onDeleteboard }: BoardViewProps) {
   const [pipelines, setPipelines] = useState<PipelinesInfo[]>([]);
   const [userRole, setUserRole] = useState<BoardMemberInfo | undefined>(undefined);
   const [userMembers, setUserMembers] = useState<BoardMemberInfo[]>([]);
@@ -117,7 +118,7 @@ export function BoardView({ board, user, onBack }: BoardViewProps) {
         const response=await DeleteBoardById(board.id);
         if(response){
           Swal.fire('Éxito','El tablero ha sido eliminado correctamente','success');
-          /* onDeleteboard(board.id); */
+          onDeleteboard(board.id);
           onBack();
         }
 

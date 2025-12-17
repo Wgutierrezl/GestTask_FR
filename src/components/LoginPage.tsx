@@ -137,14 +137,14 @@ export function LoginPage({ onLogin ,onNavigateToRegister }: LoginPageProps) {
             </p>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-slate-100">
+          {/* <div className="mt-6 pt-6 border-t border-slate-100">
             <div className="bg-blue-50 rounded-xl p-4">
               <p className="text-sm text-slate-600 mb-2">💡 Prueba la demo:</p>
               <p className="text-xs font-mono bg-white px-3 py-2 rounded-lg text-slate-700 border border-slate-200">
                 demo@gesttask.com
               </p>
             </div>
-          </div>
+          </div> */}
         </motion.div>
 
         {/* Footer */}

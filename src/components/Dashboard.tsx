@@ -55,8 +55,11 @@ export function Dashboard({ onLogout }: DashboardProps) {
   },[]);
 
 
-  const handleDeleteBoard = (board: BoardInfoDTO) => {
-      setSelectedBoard(board);
+  const handleDeleteBoard = (boardId: string) => {
+      /* setSelectedBoard(board); */
+    setBoards(prev =>
+      prev ? prev.filter(board => board.id !== boardId) : []
+    );
   };
 
   const handleUpdateBoard = (board: BoardInfoDTO) => {
@@ -69,6 +72,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
         board={selectedBoard}
         user={user}
         onBack={() => setSelectedBoard(undefined)}
+        onDeleteboard={handleDeleteBoard}
       />
     );
   }
