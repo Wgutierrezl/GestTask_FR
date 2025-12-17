@@ -26,7 +26,7 @@ export async function GetPipelinesByBoardId(tableroId:string) : Promise<Pipeline
         const response=await api.get(`/api/pipelines/getPipelinesByBoardId/${tableroId}`);
         console.log(response.data);
         return response.data.map((item:any) => ({
-            id: item._id,
+            id: item.id,
             nombre: item.nombre,
             descripcion: item.descripcion,
             tableroId: item.tableroId,

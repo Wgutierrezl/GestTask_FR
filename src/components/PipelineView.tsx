@@ -45,6 +45,7 @@ export function PipelineView({
   useEffect(() => {
     const fetchTasks = async () => {
       const response = await GetTasksByPipelineId(pipeline.id);
+      console.log('Tareas obtenidas para el pipeline:', response);
 
       if(!response){
         setTasks([]);
