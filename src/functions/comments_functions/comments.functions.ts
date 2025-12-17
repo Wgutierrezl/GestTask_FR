@@ -75,14 +75,21 @@ export async function GetCommentsByTaskId(taskId:string) : Promise<CommentInfo[]
     }
 }
 
-
 //METHOD TO DOWNLOAD A FILE BY ITS URL
 export async function DownloadFileByUrl(commentId:string, fileId:string) : Promise<SessionFileDTO | void> {
     try{
-        const response=await api.get<SessionFileDTO>(`/api/comments/downloadFile/${commentId}/file/${fileId}`);
+        const response=await api.get(`/api/comments/downloadFile/${commentId}/file/${fileId}`);
         console.log(response.data);
-        return response.data;
+        return {
+            userId: response.data.userId,
+            url: response.data.url
+        };
     }catch(error:any){
+        const status = error.response?.status;
+        if (status === 404) {
+            Swal.fire('Error','El archivo que intentas descargar no existe.');
+            return ;
+        } 
         Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
         return ;
     }

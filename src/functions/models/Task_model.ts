@@ -24,6 +24,7 @@ export interface TaskInfoDTO{
     asignadoA: string
     prioridad: Prioridad
     estado: Estado
+    fechaCreacion?: Date
     fechaLimite: Date
     fechaFinalizacion: Date;
 }

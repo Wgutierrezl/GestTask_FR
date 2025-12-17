@@ -14,6 +14,8 @@ import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Bo
 import { GetCommentsByTaskId } from '../functions/comments_functions/comments.functions';
 import { AddComment } from '../functions/comments_functions/comments.functions';
 import type { CommentInfo, CreateCommentDTO, FileInputDTO } from '../functions/models/comment_model';
+import { DownloadFileByUrl } from '../functions/comments_functions/comments.functions';
+import { DeleteTaskById, UpdateTaskById } from '../functions/task_functions/task.functions';
 import Swal from 'sweetalert2';
 
 type TaskDetailModalProps = {
@@ -122,12 +124,33 @@ export function TaskDetailModal({
     setIsEditing(false);
   }; */
 
-  /* const handleDelete = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
-      onDelete(task.id);
-    }
-  }; */
+  const handleDelete = async () => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción eliminará la tarea de forma permanente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
 
+    if(result.isConfirmed){
+      try{
+        const deleted = await DeleteTaskById(task.id, boardId);
+        if(deleted){
+          Swal.fire('Eliminada','La tarea ha sido eliminada exitosamente.','success');
+          onDelete(task.id);
+        }else{
+          Swal.fire('Error','No se pudo eliminar la tarea.','error');
+          return ;
+        }
+      }catch(error:any){
+        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
+        return ;
+      }
+    }
+
+  }
   /* const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -172,6 +195,24 @@ export function TaskDetailModal({
   /* const handleRemoveAttachment = (attachmentId: string) => {
     setAttachments(prev => prev.filter(a => a.id !== attachmentId));
   }; */
+
+
+  const handleDownloadAttachment=async(commentId:string, fileId:string) => {
+    try{
+      const sessionFile=await DownloadFileByUrl(commentId, fileId);
+      if(!sessionFile){
+        Swal.fire('Error','No se pudo obtener el archivo.','error');
+        return ;
+      }
+
+      //open the file in a new tab
+      window.open(sessionFile.url, '_blank');
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
+      return ;
+    }
+
+  };
 
   const handleAddComment = async () => {
     if (!newComment.trim() && attachments.length === 0) return;
@@ -240,7 +281,7 @@ export function TaskDetailModal({
               </button>
             )}
             <button
-              /* onClick={handleDelete} */
+              onClick={handleDelete}
               className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"
               title="Eliminar"
             >
@@ -517,14 +558,13 @@ export function TaskDetailModal({
                                     <p className="text-sm text-slate-900 truncate">{attachment.nombre}</p>
                                     {/* <p className="text-xs text-slate-500">{formatFileSize(attachment.)}</p> */}
                                   </div>
-                                  <a
-                                    href={attachment.url}
-                                    download={attachment.nombre}
+                                  <button
+                                    onClick={() => handleDownloadAttachment(comment.id, attachment.id)}
                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                     title="Descargar"
                                   >
                                     <Download className="w-4 h-4" />
-                                  </a>
+                                  </button>
                                 </div>
                               ))}
                             </div>
