@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { Dashboard } from './components/Dashboard';
 import type { UserInfo } from './functions/models/UserInfoDTO';
 import type { SessionDTO } from './functions/models/LoginDTO';
+import { useAuth0 } from '@auth0/auth0-react';
+import { loginWithOauth0Backend } from './functions/oAuth0_functions/oAuth0.functions';
 
 export type User = {
   id: string;
@@ -86,6 +88,29 @@ type Page = 'login' | 'register' | 'dashboard';
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('login');
   const [currentUser, setCurrentUser] = useState<SessionDTO | null>(null);
+  
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    const syncAuth0 = async () => {
+      if (!isAuthenticated) return;
+
+      const auth0Token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
+
+      const session = await loginWithOauth0Backend(auth0Token);
+
+      localStorage.setItem('token', session.token);
+      localStorage.setItem('rol', session.rol);
+      localStorage.setItem('userId', session.userId);
+      localStorage.setItem('nombre', session.nombre);
+    };
+
+    syncAuth0();
+  }, [isAuthenticated]);
 
 
   const handleLogout = () => {

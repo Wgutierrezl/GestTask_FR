@@ -4,6 +4,7 @@ import { Boxes, Mail, Lock, ArrowRight } from 'lucide-react';
 import { LogUser } from '../functions/user_functions/user';
 import Swal from 'sweetalert2';
 import type { SessionDTO } from '../functions/models/LoginDTO';
+import { useAuth0 } from '@auth0/auth0-react';
 
 type LoginPageProps = {
   onLogin: (session:SessionDTO) => void;
@@ -13,6 +14,7 @@ type LoginPageProps = {
 export function LoginPage({ onLogin ,onNavigateToRegister }: LoginPageProps) {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
+  const { loginWithRedirect } = useAuth0();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +124,14 @@ export function LoginPage({ onLogin ,onNavigateToRegister }: LoginPageProps) {
             >
               Ingresar
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => loginWithRedirect()}
+              className="w-full mt-4 border border-slate-200 py-3 rounded-xl"
+            >
+              Ingresar con Auth0
             </button>
           </form>
 
