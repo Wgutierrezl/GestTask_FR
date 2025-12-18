@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { X, LayoutGrid, Users, Check } from 'lucide-react';
 import type { User } from '../App';
-import type { BoardCreate } from '../functions/models/Board_model';
+import type { BoardCreate, BoardInfoDTO } from '../functions/models/Board_model';
 import { CreateBoard } from '../functions/board_functions/board.functions';
 import Swal from 'sweetalert2';
 
 interface Props {
   onClose: () => void;
+  onCreate : (board:BoardInfoDTO) => void;
 }
 
-export function CreateBoardModal({ onClose } : Props ) {
+export function CreateBoardModal({ onClose, onCreate } : Props ) {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
@@ -25,6 +26,7 @@ export function CreateBoardModal({ onClose } : Props ) {
       }
 
       Swal.fire('Informacion','tablero creado correctamente','success');
+      onCreate(response);
       onClose();
 
     }catch(error:any){

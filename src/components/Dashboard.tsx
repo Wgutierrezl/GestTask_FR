@@ -66,6 +66,10 @@ export function Dashboard({ onLogout }: DashboardProps) {
     setSelectedBoard(board);
   };
 
+  const handleBoardCreated = (newBoard: BoardInfoDTO) => {
+    setBoards(prev => prev ? [newBoard, ...prev] : [newBoard]);
+  };
+
   if (selectedBoard) {
     return (
       <BoardView
@@ -219,6 +223,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       {showCreateModal && (
         <CreateBoardModal
           onClose={() => setShowCreateModal(false)}
+          onCreate={handleBoardCreated}
         />
       )}
     </div>

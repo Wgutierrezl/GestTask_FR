@@ -10,7 +10,19 @@ export async function CreatePipeline(data:pipelinesDTO, tableroId:string) : Prom
     try{
         const response=await api.post(`/api/pipelines/createPipelines/boardId/${tableroId}` , data);
         console.log(response.data);
-        return response.data;
+        return {
+            id:response.data._id,
+            nombre:response.data.nombre,
+            descripcion:response.data.descripcion,
+            tableroId:response.data.tableroId,
+            estado:response.data.estado,
+            etapas:response.data.etapas.map((item:any) => ({
+                id:item._id,
+                nombre:item.nombre,
+                orden:item.orden
+            })),
+            fechaCreacion: new Date(response.data.fechaCreacion)
+        };
 
     }catch(error:any){
         Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');

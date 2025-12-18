@@ -9,7 +9,14 @@ export async function CreateBoard(data:BoardCreate) : Promise<BoardInfoDTO | voi
     try{
         const response=await api.post('/api/boards/createBoard',data);
         console.log(response.data);
-        return response.data;
+        return {
+            id:response.data._id,
+            nombre:response.data.nombre,
+            ownerId:response.data.ownerId,
+            descripcion:response.data.descripcion,
+            fechaCreacion:response.data.fechaCreacion ?? new Date(),
+            estado:response.data.estado ?? 'activo'
+        };
 
     }catch(error:any){
         Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
