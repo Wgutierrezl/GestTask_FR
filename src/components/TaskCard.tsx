@@ -67,13 +67,21 @@ export function TaskCard({ task, user, userRole, index, canDrag = true, onClick 
 
   return (
     <motion.div
-      ref={canDrag as unknown as React.Ref<HTMLDivElement>}
+      ref={(node) => {
+        if (node) drag(node);
+      }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      style={{ 
+        opacity: isDragging ? 0.5 : 1,
+        cursor: canDrag ? 'grab' : 'default',
+        // Evita que framer-motion interfiera con el drag de dnd
+        touchAction: 'none' 
+      }}
       transition={{ delay: index * 0.03 }}
       onClick={onClick}
       className={`bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md cursor-pointer transition-all group ${
-        isDragging ? 'opacity-50 scale-95' : ''
+        isDragging ? 'opacity-50 scale-95 shadow-lg' : ''
       }`}
     >
       {/* Drag Handle & Priority */}

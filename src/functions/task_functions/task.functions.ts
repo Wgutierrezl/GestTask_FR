@@ -1,6 +1,7 @@
 import api from "../ApiReutilizable";
 import Swal from "sweetalert2";
 import type { TaskDTO, TaskInfoDTO } from "../models/Task_model";
+import type { StageDTO } from "../models/Stage_models";
 
 //METHOD TO CREATE A TASK
 export async function CreateTask(data:TaskDTO, boardId:string) : Promise<TaskInfoDTO | void> {
@@ -94,4 +95,19 @@ export async function UpdateTaskById(id:string, data:TaskDTO, boardId:string) : 
         Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
         return ;
     }
+}
+
+
+//METHOD TO UPDATE STAGE ID TASK BY TASK ID
+export async function UpdateStageTaskId(taskId:string, stage:StageDTO, boardId:string) : Promise<TaskInfoDTO | void> {
+    try{
+        const response=await api.put<TaskInfoDTO>(`/api/tasks/updateStageTaskId/${taskId}/boardId/${boardId}`,stage);
+        console.log(response.data);
+        return response.data;
+
+    }catch(error:any){
+        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
+        throw error;
+    }
+    
 }

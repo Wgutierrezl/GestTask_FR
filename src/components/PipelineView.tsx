@@ -15,6 +15,8 @@ import Swal from 'sweetalert2';
 import { CreateTask } from '../functions/task_functions/task.functions';
 import type { TaskDTO, TaskInfoDTO } from '../functions/models/Task_model';
 import { DeletePipelineById } from '../functions/pipelines_functions/pipeline.functions';
+import { UpdateStageTaskId } from '../functions/task_functions/task.functions';
+import type { StageDTO } from '../functions/models/Stage_models';
 
 type PipelineViewProps = {
   pipeline: PipelinesInfo;
@@ -66,6 +68,7 @@ export function PipelineView({
 
   // Get current user's role in the board
   const currentUserRole = userRole.rol;
+  console.log(`rol del usuario dentro del tablero ${currentUserRole}`);
   const canCreateTask = currentUserRole === 'owner' || currentUserRole === 'miembro';
   const canMoveTask = currentUserRole === 'owner' || currentUserRole === 'miembro';
   const canDelete = currentUserRole === 'owner';
@@ -103,11 +106,29 @@ export function PipelineView({
     setSelectedStageId(null);
   };
 
-  const handleMoveTask = (taskId: string, newEtapaId: string) => {
+  const handleMoveTask = async (taskId: string, newEtapaId: string) => {
     if (!canMoveTask) return;
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, etapaId: newEtapaId } : task
-    ));
+    try{
+      
+      const response=await UpdateStageTaskId(taskId,{stageId:newEtapaId},board.id);
+      if(!response){
+        Swal.fire('error','no hemos logrado cambiar de lugar a la tarea','error');
+        return;
+      }
+
+      // Actualizamos basándonos en el estado anterior para asegurar que no borramos datos
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, etapaId: newEtapaId } // Solo cambiamos la etapa, mantenemos el resto intacto
+          : task
+      ));
+
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error}`,'error');
+      return;
+
+    }
+    
   };
 
   const handleDeleteTask = (taskId: string) => {

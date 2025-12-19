@@ -37,6 +37,7 @@ export function StageColumn({
     >(() => ({
     accept: 'TASK',
     drop: (item) => {
+        console.log('DROP ITEM:', item);
         if (canMoveTask) onMoveTask(item.id, stage.id);
     },
     collect: (monitor) => ({
