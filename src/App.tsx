@@ -107,6 +107,9 @@ export default function App() {
       localStorage.setItem('rol', session.rol);
       localStorage.setItem('userId', session.userId);
       localStorage.setItem('nombre', session.nombre);
+
+      setCurrentUser(session);
+      setCurrentPage('dashboard');
     };
 
     syncAuth0();
