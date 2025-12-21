@@ -41,6 +41,7 @@ export function RegisterPage({ onRegister,onNavigateToLogin }: RegisterPageProps
       }
 
       console.log(result);
+      onNavigateToLogin();
 
     }catch(error:any){
       Swal.fire('error',`ha ocurrido un error inesperado ${error}`,'error');
