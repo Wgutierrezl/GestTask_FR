@@ -49,6 +49,30 @@ export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /*
   },[]);
 
 
+  const refreshMembers=async()=> {
+    try{
+      const response=await GetBoardsMemberByBoardId(board.id);
+      if(!response){
+        setUsersMembers([]);
+        return ;
+      }
+
+      if(response.length===0){
+        Swal.fire('informacion',`aun no hay miembros para este tablero`,'info');
+        setUsersMembers([]);
+        return;
+      }
+
+      setUsersMembers(response);
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error}`,'error');
+      setUsersMembers([]);
+      return ;
+
+    }
+  };
+
+
 
   const currentUserRole = userRole?.rol;
   const isOwner = currentUserRole === 'owner';
@@ -69,6 +93,10 @@ export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /*
             Swal.fire('Error','No se pudo agregar el miembro al tablero','error');
             return;
           }
+
+
+          //THIS IS FOR REFRESH THE MEMBERS
+          await refreshMembers();
 
           /* const updatedBoard = {
           ...board,
@@ -96,6 +124,9 @@ export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /*
       }
 
       Swal.fire('Exito','Miembro removido del tablero','success');
+
+      //This is for refresh the members
+      await refreshMembers();
 
     }catch(error:any){
       Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
@@ -125,6 +156,9 @@ export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /*
         return;
       }
       Swal.fire('Exito','Rol del miembro actualizado','success');
+
+      //this is for refresh the members
+      await refreshMembers();
 
     }catch(error:any){
       Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
