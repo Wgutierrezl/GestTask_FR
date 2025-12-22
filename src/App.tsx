@@ -117,6 +117,7 @@ export default function App() {
 
 
   const handleLogout = () => {
+    localStorage.clear();
     setCurrentUser(null);
     setCurrentPage('login');
   };
