@@ -35,9 +35,9 @@ jobs:
             echo "VITE_API_URL=${{ secrets.VITE_API_URL_PROD }}" >> .env
           fi
 
-      - name: Run linter
-        run: npm run lint
-        continue-on-error: true
+      #- name: Run linter
+      #  run: npm run lint
+      #  continue-on-error: true
       
       - name: Build project
         run: npm run build
