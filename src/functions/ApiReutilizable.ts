@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8097",
+  baseURL: "http://alb-gesttask-1697059265.us-east-1.elb.amazonaws.com:8097",
 });
 
 // 🔥 Interceptor de solicitud
