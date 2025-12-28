@@ -29,11 +29,11 @@ jobs:
           echo "VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}" >> .env
           echo "VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}" >> .env
 
-         # if [[ "${{ github.ref }}" == "refs/heads/GT_Front_Oauth0_Dev" ]]; then
-         #   echo "VITE_API_URL=${{ secrets.VITE_API_URL_DEV }}" >> .env
-         # else
-         #   echo "VITE_API_URL=${{ secrets.VITE_API_URL_PROD }}" >> .env
-         # fi
+          if [[ "${{ github.ref }}" == "refs/heads/GT_Front_Oauth0_Dev" ]]; then
+            echo "VITE_API_URL=${{ secrets.VITE_API_URL_DEV }}" >> .env
+          else
+            echo "VITE_API_URL=${{ secrets.VITE_API_URL_PROD }}" >> .env
+          fi
 
       #- name: Run linter
       #  run: npm run lint
