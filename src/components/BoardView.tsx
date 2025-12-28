@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Plus, Boxes, Users, MoreVertical, Trash2, Archive, Workflow, Sparkles, UserCog, Eye } from 'lucide-react';
-import type { Board, User, Pipeline } from '../App';
+import { ArrowLeft, Plus, Boxes, Users, MoreVertical, Trash2, Workflow, Sparkles, UserCog, Eye } from 'lucide-react';
+import type { Pipeline } from '../App';
 import { PipelineView } from './PipelineView';
 import { CreatePipelineModal } from './CreatePipelineModal';
 import { ManageMembersModal } from './ManageMembersModal';
-import type { pipelinesDTO, PipelinesInfo } from '../functions/models/Pipeline_model';
+import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import { GetPipelinesByBoardId } from '../functions/pipelines_functions/pipeline.functions';
-import type { BoardInfoDTO, BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardInfoDTO, BoardMemberInfo } from '../functions/models/Board_model';
 import Swal from 'sweetalert2';
 import { GetMembersBoardByBoardIdToken } from '../functions/board_members_functions/board_member_functions';
 import { CreatePipeline } from '../functions/pipelines_functions/pipeline.functions';

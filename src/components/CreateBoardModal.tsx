@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, LayoutGrid, Users, Check } from 'lucide-react';
-import type { User } from '../App';
-import type { BoardCreate, BoardInfoDTO } from '../functions/models/Board_model';
+import { X, LayoutGrid } from 'lucide-react';
+import type { BoardInfoDTO } from '../functions/models/Board_model';
 import { CreateBoard } from '../functions/board_functions/board.functions';
 import Swal from 'sweetalert2';
 
@@ -14,7 +13,6 @@ interface Props {
 export function CreateBoardModal({ onClose, onCreate } : Props ) {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

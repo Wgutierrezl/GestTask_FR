@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, LogOut, Boxes, LayoutGrid, Users, Sparkles, Archive } from 'lucide-react';
-import type { Board, BoardMember, User } from '../App';
+import { Plus, LogOut, Boxes, LayoutGrid, Sparkles } from 'lucide-react';
 import { BoardView } from './BoardView';
 import { CreateBoardModal } from './CreateBoardModal';
 import type { UserInfo } from '../functions/models/UserInfoDTO';

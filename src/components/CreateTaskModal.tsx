@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { X, CheckSquare, Calendar, User, AlertCircle } from 'lucide-react';
-import type { Board, User as UserType } from '../App';
-import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
+import type { BoardMemberInfo } from '../functions/models/Board_model';
 
 type CreateTaskModalProps = {
   users: BoardMemberInfo[];
