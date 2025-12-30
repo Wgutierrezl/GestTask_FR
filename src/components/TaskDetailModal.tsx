@@ -9,7 +9,7 @@ import { useRef } from 'react';
 import { File as FileIcon } from 'lucide-react';
 import type { Task, Pipeline, User as UserType, Comment, CommentAttachment } from '../App';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
-import type { TaskInfoDTO } from '../functions/models/Task_model';
+import type { TaskInfoDTO, TaskUpdate } from '../functions/models/Task_model';
 import type { BoardMemberInfo, BoardMemberInfoDTO } from '../functions/models/Board_model';
 import { GetCommentsByTaskId } from '../functions/comments_functions/comments.functions';
 import { AddComment } from '../functions/comments_functions/comments.functions';
@@ -76,6 +76,7 @@ export function TaskDetailModal({
 
   const assignedUser = users.find(u => u.usuarioId.id === task.asignadoA);
   const currentStage = pipeline.etapas.find(e => e.id === task.etapaId);
+  console.log(`prioridad seleccionada ${task.prioridad}`)
   const priorityStyle = priorityConfig[task.prioridad] ?? priorityConfig.Baja;
   const estadoStyle = estadoConfig[task.estado] ?? estadoConfig.Inactivo;
 
@@ -107,22 +108,38 @@ export function TaskDetailModal({
 
   },[task.id]);
 
-  /* const handleSaveEdit = () => {
-    const updatedTask: Task = {
-      ...task,
-      titulo: editedTitulo,
-      descripcion: editedDescripcion,
-      prioridad: editedPrioridad,
-      estado: editedEstado,
-      asignadoA: editedAsignadoA,
-      fechaLimite: editedFechaLimite ? new Date(editedFechaLimite) : undefined,
-      fechaFinalizacion: editedEstado === 'Inactivo' && task.estado !== 'Inactivo' 
-        ? new Date() 
-        : task.fechaFinalizacion
-    };
-    onUpdate(updatedTask);
-    setIsEditing(false);
-  }; */
+  const handleSaveEdit = async () => {
+    try{
+      const data: TaskUpdate = {
+        titulo: editedTitulo,
+        descripcion: editedDescripcion,
+        asignadoA: editedAsignadoA,
+        priodidad: editedPrioridad,
+        estado: editedEstado,
+        fechaLimite: editedFechaLimite
+          ? new Date(editedFechaLimite)
+          : task.fechaLimite, // fallback seguro
+        fechaFinalizacion:
+          editedEstado === 'Inactivo' && task.estado !== 'Inactivo'
+            ? new Date()
+            : task.fechaFinalizacion
+      };
+
+      const taskUpdated=await UpdateTaskById(task.id, data,boardId);
+      if(!taskUpdated){
+        Swal.fire('error','no hemos logrado actualizar la tarea','error');
+        return;
+      }
+
+      onUpdate(taskUpdated);
+      setIsEditing(false);
+
+    }catch(error:any){
+      Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
+      return;
+    }
+    
+  };
 
   const handleDelete = async () => {
     const result = await Swal.fire({
@@ -492,7 +509,7 @@ export function TaskDetailModal({
                 Cancelar
               </button>
               <button
-                /* onClick={handleSaveEdit} */
+                onClick={handleSaveEdit}
                 className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
               >
                 <Check className="w-4 h-4" />
