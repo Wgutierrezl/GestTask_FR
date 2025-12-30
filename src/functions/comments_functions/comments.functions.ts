@@ -70,8 +70,11 @@ export async function GetCommentsByTaskId(taskId:string) : Promise<CommentInfo[]
         }));
 
     }catch(error:any){
-        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
-        return ;
+        const statusCode=error.response.status;
+        if(statusCode===404 || statusCode===400){
+            return ;
+        }
+        throw error;
     }
 }
 

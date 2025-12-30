@@ -51,8 +51,12 @@ export async function GetPipelinesByBoardId(tableroId:string) : Promise<Pipeline
         }));
 
     }catch(error:any){
-        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
-        return ;
+        const statusCode=error.response.status;
+        if(statusCode===404 || statusCode===400){
+            return ;
+        }
+        
+        throw error;
     }
     
 }

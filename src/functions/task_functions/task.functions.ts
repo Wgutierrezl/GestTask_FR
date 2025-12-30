@@ -45,8 +45,12 @@ export async function GetTasksByPipelineId(pipelineId:string) : Promise<TaskInfo
             fechaFinalizacion: new Date(item.fechaFinalizacion)
         }));
     }catch(error:any){
-        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
-        return ;
+        const status=error.response.status;
+        if(status===400 || status===404){
+            return ;
+        }
+        
+        throw error;
     }
 }
 

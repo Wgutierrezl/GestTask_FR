@@ -39,8 +39,11 @@ export async function GetMyBoards() : Promise<BoardInfoDTO[] | void> {
             estado: b.estado
         }));
     }catch(error:any){
-        Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
-        return ;
+        const statusCode=error.response.status;
+        if(statusCode===400 || statusCode===404){
+            return ;
+        }
+        throw error;
     }
     
 }
