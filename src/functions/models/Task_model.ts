@@ -28,3 +28,13 @@ export interface TaskInfoDTO{
     fechaLimite: Date
     fechaFinalizacion: Date;
 }
+
+export interface TaskUpdate{
+    titulo:string
+    descripcion: string
+    asignadoA: string
+    priodidad: Prioridad
+    estado: Estado
+    fechaLimite: Date
+    fechaFinalizacion: Date;
+}

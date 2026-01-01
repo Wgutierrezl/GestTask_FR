@@ -1,6 +1,6 @@
 import api from "../ApiReutilizable";
 import Swal from "sweetalert2";
-import type { TaskDTO, TaskInfoDTO } from "../models/Task_model";
+import type { TaskDTO, TaskInfoDTO, TaskUpdate } from "../models/Task_model";
 import type { StageDTO } from "../models/Stage_models";
 
 //METHOD TO CREATE A TASK
@@ -39,14 +39,18 @@ export async function GetTasksByPipelineId(pipelineId:string) : Promise<TaskInfo
             pipelineId: item.pipelineId,
             etapaId: item.etapaId,
             asignadoA: item.asignadoA,
-            priodidad: item.priodidad,
+            prioridad: item.priodidad,
             estado: item.estado,
             fechaLimite: new Date(item.fechaLimite),
             fechaFinalizacion: new Date(item.fechaFinalizacion)
         }));
     }catch(error:any){
-        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
-        return ;
+        const status=error.response.status;
+        if(status===400 || status===404){
+            return ;
+        }
+        
+        throw error;
     }
 }
 
@@ -69,11 +73,11 @@ export async function DeleteTaskById(id:string, boardId:string) : Promise<boolea
 
 
 //METHOD TO UPDATE A TASK
-export async function UpdateTaskById(id:string, data:TaskDTO, boardId:string) : Promise<TaskInfoDTO | void> {
+export async function UpdateTaskById(id:string, data:TaskUpdate, boardId:string) : Promise<TaskInfoDTO | void> {
     try{
-        const response=await api.put(`/api/tasks/updateTaskById/${id}/boardId/${boardId}`, data);
+        const response=await api.put<TaskInfoDTO>(`/api/tasks/updateTask/${id}/boardId/${boardId}`, data);
         console.log(response.data);
-        return  {
+        /* return  {
             id: response.data._id, 
             titulo: response.data.titulo,
             descripcion: response.data.descripcion,
@@ -85,7 +89,8 @@ export async function UpdateTaskById(id:string, data:TaskDTO, boardId:string) : 
             fechaCreacion: new Date(response.data.fechaCreacion),
             fechaLimite: new Date(response.data.fechaLimite),
             fechaFinalizacion: new Date(response.data.fechaFinalizacion)
-        };
+        }; */
+        return response.data;
     }catch(error:any){
         const status = error.response?.status;
         if (status === 404) {

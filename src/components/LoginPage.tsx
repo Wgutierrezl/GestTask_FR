@@ -30,7 +30,7 @@ export function LoginPage({ onLogin ,onNavigateToRegister }: LoginPageProps) {
       localStorage.setItem('token',session.token);
       localStorage.setItem('nombre',session.nombre);
 
-      Swal.fire('Informacion','te has logeado correctamente','info');
+      /* Swal.fire('Informacion','te has logeado correctamente','info'); */
 
       onLogin(session);
 
