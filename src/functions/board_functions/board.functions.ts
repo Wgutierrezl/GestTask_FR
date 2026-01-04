@@ -64,3 +64,21 @@ export async function DeleteBoardById(boardId:string) : Promise<boolean> {
         return false;
     }
 }
+
+//METHOD TO GET ALL BOARDS BY USER ID 
+export async function GetBoardByUserId(userId:string) : Promise<BoardInfoDTO[] | void> {
+    try{
+        const response=await api.get<BoardInfoDTO[]>(`/api/boards/getBoardByOwnerId/${userId}`);
+        console.log(response.data);
+        return response.data;
+
+    }catch(error:any){
+        const statusCode=error.response.status;
+        if(statusCode===400 || statusCode===404){
+            return ;
+        }
+        throw error;
+    
+    }
+    
+}

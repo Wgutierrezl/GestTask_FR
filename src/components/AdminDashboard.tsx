@@ -1,36 +1,69 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Shield, Users, LayoutGrid, Workflow, CheckSquare, MessageSquare,
   TrendingUp, ArrowLeft, Eye, Search, Calendar, Award
 } from 'lucide-react';
-import { User, Board, Pipeline, Task } from '../App';
 import { UserDetailModal } from './UserDetailModal';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
-import type { BoardInfoDTO } from '../functions/models/Board_model';
+import { type BoardMemberInfo, type BoardInfoDTO } from '../functions/models/Board_model';
+import { getDashboardSummary } from '../functions/dashboard_functions/dashboard.functions';
+import { GetAllUsers } from '../functions/user_functions/user';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
 import type { CommentInfo } from '../functions/models/comment_model';
+import Swal from 'sweetalert2';
 
 type AdminDashboardProps = {
-  users: UserInfo[];
+  /* users: UserInfo[];
   boards: BoardInfoDTO[];
   pipelines: PipelinesInfo[];
   tasks: TaskInfoDTO[];
-  comments: CommentInfo[];
+  comments: CommentInfo[]; */
   onBack: () => void;
 };
 
-export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBack }: AdminDashboardProps) {
+export function AdminDashboard({ /* users, boards, pipelines, tasks, comments, */ onBack }: AdminDashboardProps) {
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null);
+
+  const [users,setUsers]=useState<UserInfo[]>();
+  /* const [usersMembers, seUsersMembers]=useState<BoardMemberInfo[]>(); */
+
+  const [totalUsers,setTotalUsers]=useState<number>();
+  const [totalBoards,setTotalBoard]=useState<number>();
+  const [totalPipelines,setTotalPipelines]=useState<number>();
+  const [totalTasks,setTotalTask]=useState<number>();
+  const [totalComments,setTotalComments]=useState<number>();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Calculate global metrics
-  const totalUsers = users.length;
-  const totalBoards = boards.length;
-  const totalPipelines = pipelines.length;
-  const totalTasks = tasks.length;
-  const totalComments = comments.length;
+  useEffect(()=> {
+    const fetchData=async() => {
+      try{
+        const [dashRes, userRes]=await Promise.all([
+          getDashboardSummary(),
+          GetAllUsers(),
+        ]);
+
+        if (dashRes) {
+          setTotalUsers(dashRes.totalUsers ?? 0);
+          setTotalBoard(dashRes.totalBoards ?? 0);
+          setTotalPipelines(dashRes.totalPipelines ?? 0);
+          setTotalTask(dashRes.totalTask ?? 0);
+          setTotalComments(dashRes.totalComments ?? 0);
+        }
+
+        if(userRes){
+          setUsers(userRes ?? []);
+        }
+
+      }catch(error:any){
+        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}` ,'error');
+        return;
+
+      }
+    }
+    fetchData();
+  },[]);
 
   const metrics = [
     {
@@ -76,13 +109,13 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
   ];
 
   // Filter users by search term
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = (users ?? []).filter(user =>
     user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.correo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Get user statistics
-  const getUserStats = (userId: string) => {
+  /* const getUserStats = (userId: string) => {
     const userBoards = boards.filter(b => b.ownerId === userId).length;
     const userPipelines = pipelines.filter(p => p.ownerId === userId).length;
     const userTasks = tasks.filter(t => t.asignadoA === userId).length;
@@ -90,7 +123,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
       return acc + task.comentarios.filter(c => c.userId === userId).length;
     }, 0);
     return { userBoards, userPipelines, userTasks, userComments };
-  };
+  }; */
 
   const getRoleBadge = (rol: string) => {
     const config = {
@@ -164,7 +197,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
               <Users className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg text-slate-900">Gestión de usuarios</h2>
               <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs">
-                {filteredUsers.length}
+                {filteredUsers?.length}
               </span>
             </div>
             <div className="relative">
@@ -197,9 +230,9 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
                     <th className="text-left px-6 py-4 text-xs text-slate-600 uppercase tracking-wider">
                       Fecha de registro
                     </th>
-                    <th className="text-left px-6 py-4 text-xs text-slate-600 uppercase tracking-wider">
+                    {/* <th className="text-left px-6 py-4 text-xs text-slate-600 uppercase tracking-wider">
                       Actividad
-                    </th>
+                    </th> */}
                     <th className="text-center px-6 py-4 text-xs text-slate-600 uppercase tracking-wider">
                       Acciones
                     </th>
@@ -207,7 +240,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {filteredUsers.map((user) => {
-                    const stats = getUserStats(user._id);
+                    /* const stats = getUserStats(user._id); */
                     const roleBadge = getRoleBadge(user.rol);
                     
                     return (
@@ -224,7 +257,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
                             </div>
                             <div>
                               <p className="text-sm text-slate-900">{user.nombre}</p>
-                              <p className="text-xs text-slate-500">ID: {user.id}</p>
+                              <p className="text-xs text-slate-500">ID: {user._id}</p>
                             </div>
                           </div>
                         </td>
@@ -241,7 +274,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-slate-400" />
                             <span className="text-sm text-slate-600">
-                              {user.fechaRegistro.toLocaleDateString('es-ES', {
+                              {new Date(user.fechaRegistro).toLocaleDateString('es-ES', {
                                 day: 'numeric',
                                 month: 'short',
                                 year: 'numeric'
@@ -249,7 +282,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        {/* <td className="px-6 py-4">
                           <div className="flex items-center gap-3 text-xs text-slate-600">
                             <div className="flex items-center gap-1">
                               <LayoutGrid className="w-3 h-3" />
@@ -268,7 +301,7 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
                               <span>{stats.userComments}</span>
                             </div>
                           </div>
-                        </td>
+                        </td> */}
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
@@ -294,9 +327,9 @@ export function AdminDashboard({ users, boards, pipelines, tasks, comments, onBa
       {selectedUser && (
         <UserDetailModal
           user={selectedUser}
-          boards={boards}
+          /* boards={boards}
           pipelines={pipelines}
-          tasks={tasks}
+          tasks={tasks} */
           onClose={() => setSelectedUser(null)}
         />
       )}

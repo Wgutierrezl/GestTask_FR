@@ -1,32 +1,64 @@
 import { motion } from 'motion/react';
 import { X, User as UserIcon, Calendar, Mail, Award, LayoutGrid, Workflow, CheckSquare, MessageSquare, TrendingUp } from 'lucide-react';
-import { User, Board, Pipeline, Task } from '../App';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
+import { getUserDashboardByUserId, getUserBoardSummary } from '../functions/dashboard_functions/dashboard.functions';
+import { GetBoardByUserId } from '../functions/board_functions/board.functions';
 import type { BoardInfoDTO } from '../functions/models/Board_model';
 import type { PipelinesInfo } from '../functions/models/Pipeline_model';
 import type { TaskInfoDTO } from '../functions/models/Task_model';
+import { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
+import type { DashboardBoardDTO } from '../functions/models/Dashboard_model';
 
 type UserDetailModalProps = {
   user: UserInfo;
-  boards: BoardInfoDTO[];
+  /* boards: BoardInfoDTO[];
   pipelines: PipelinesInfo[];
-  tasks: TaskInfoDTO[];
+  tasks: TaskInfoDTO[]; */
   onClose: () => void;
 };
 
-export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: UserDetailModalProps) {
+export function UserDetailModal({ user, /* boards, pipelines, tasks, */ onClose }: UserDetailModalProps) {
   // Calculate user metrics
-  const userBoards = boards.filter(b => b.ownerId === user.id);
-  const userPipelines = pipelines.filter(p => p.ownerId === user.id);
-  const userTasks = tasks.filter(t => t.asignadoA === user.id);
-  const userComments = tasks.reduce((acc, task) => {
-    return acc + task.comentarios.filter(c => c.userId === user.id).length;
-  }, 0);
+  const [boards,setBoards]=useState<DashboardBoardDTO[]>([]);
+
+  const [totalBoards,setTotalBoard]=useState<number>();
+  const [totalPipelines,setTotalPipelines]=useState<number>();
+  const [totalTasks,setTotalTask]=useState<number>();
+  const [totalComments,setTotalComments]=useState<number>();
+
+  useEffect(()=> {
+    const fetchData=async()=> {
+      try{
+        const [boardRes, userDashRes]=await Promise.all([
+          getUserBoardSummary(user._id),
+          getUserDashboardByUserId(user._id)
+        ]);
+
+        if(boardRes){
+          setBoards(boardRes ?? []);
+        };
+
+        if(userDashRes){
+          setTotalBoard(userDashRes.totalBoards ?? 0);
+          setTotalPipelines(userDashRes.totalPipelines ?? 0);
+          setTotalTask(userDashRes.totalTask ?? 0);
+          setTotalComments(userDashRes.totalComments ?? 0);
+        };
+
+      }catch(error:any){
+        Swal.fire('error',`ha ocurrido un error inesperado ${error.message}`,'error');
+        return ;
+      }
+    }
+
+    fetchData();
+  },[])
 
   const metrics = [
     {
       label: 'Tableros creados',
-      value: userBoards.length,
+      value: totalBoards,
       icon: LayoutGrid,
       color: 'from-blue-500 to-indigo-500',
       bgColor: 'bg-blue-50',
@@ -34,7 +66,7 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
     },
     {
       label: 'Pipelines creados',
-      value: userPipelines.length,
+      value: totalPipelines,
       icon: Workflow,
       color: 'from-purple-500 to-pink-500',
       bgColor: 'bg-purple-50',
@@ -42,7 +74,7 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
     },
     {
       label: 'Tareas asignadas',
-      value: userTasks.length,
+      value: totalTasks,
       icon: CheckSquare,
       color: 'from-green-500 to-emerald-500',
       bgColor: 'bg-green-50',
@@ -50,7 +82,7 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
     },
     {
       label: 'Comentarios realizados',
-      value: userComments,
+      value: totalComments,
       icon: MessageSquare,
       color: 'from-orange-500 to-amber-500',
       bgColor: 'bg-orange-50',
@@ -123,9 +155,9 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
                   <span>Fecha de registro</span>
                 </div>
                 <p className="text-sm text-slate-900">
-                  {user.fechaRegistro.toLocaleDateString('es-ES', {
+                  {new Date(user.fechaRegistro).toLocaleDateString('es-ES', {
                     day: 'numeric',
-                    month: 'long',
+                    month: 'short',
                     year: 'numeric'
                   })}
                 </p>
@@ -172,17 +204,14 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
           </div>
 
           {/* User Boards */}
-          {userBoards.length > 0 && (
+          {boards.length > 0 && (
             <div>
               <h3 className="flex items-center gap-2 text-base text-slate-900 mb-4">
                 <LayoutGrid className="w-5 h-5 text-blue-600" />
-                Tableros creados ({userBoards.length})
+                Tableros creados ({boards.length})
               </h3>
               <div className="space-y-2">
-                {userBoards.map((board) => {
-                  const boardPipelines = pipelines.filter(p => p.tableroId === board.id);
-                  const boardTasks = tasks.filter(t => t.tableroId === board.id);
-                  
+                {boards.map((board) => {
                   return (
                     <motion.div
                       key={board.id}
@@ -198,13 +227,13 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
                           )}
                           <div className="flex items-center gap-4 mt-2">
                             <span className="text-xs text-slate-500">
-                              {boardPipelines.length} pipelines
+                              {board.totalPipelines} pipelines
                             </span>
                             <span className="text-xs text-slate-500">
-                              {boardTasks.length} tareas
+                              {board.totalTask} tareas
                             </span>
                             <span className="text-xs text-slate-500">
-                              {board.miembros.length} miembros
+                              {board.totalMembers} miembros
                             </span>
                           </div>
                         </div>
@@ -213,7 +242,7 @@ export function UserDetailModal({ user, boards, pipelines, tasks, onClose }: Use
                             ? 'bg-green-50 text-green-700' 
                             : 'bg-slate-100 text-slate-600'
                         }`}>
-                          {board.estado === 'activo' ? 'Activo' : 'Archivado'}
+                          {board.estado === 'activo' ? 'Activo' : 'inactivo'}
                         </span>
                       </div>
                     </motion.div>
