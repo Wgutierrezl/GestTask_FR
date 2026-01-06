@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, LogOut, Boxes, LayoutGrid, Sparkles } from 'lucide-react';
+import { Plus, LogOut, Boxes, LayoutGrid, Sparkles, Shield } from 'lucide-react';
 import { BoardView } from './BoardView';
 import { CreateBoardModal } from './CreateBoardModal';
 import type { UserInfo } from '../functions/models/UserInfoDTO';
 import { GetMyBoards } from '../functions/board_functions/board.functions';
 import { GetProfile } from '../functions/user_functions/user';
 import type { BoardInfoDTO } from '../functions/models/Board_model';
+import { AdminDashboard } from './AdminDashboard';
 import Swal from 'sweetalert2';
 
 type DashboardProps = {  
@@ -18,6 +19,9 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [selectedBoard, setSelectedBoard] = useState<BoardInfoDTO | undefined>();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard]=useState(false);
+
+  const isAdmin= localStorage.getItem('rol') === 'admin';
 
   useEffect(()=> {
     const fetchData=async()=>{
@@ -76,6 +80,14 @@ export function Dashboard({ onLogout }: DashboardProps) {
         user={user}
         onBack={() => setSelectedBoard(undefined)}
         onDeleteboard={handleDeleteBoard}
+      />
+    );
+  }
+
+  if (isAdmin && showAdminDashboard) {
+    return (
+      <AdminDashboard
+        onBack={() => setShowAdminDashboard(false)}
       />
     );
   }
@@ -224,6 +236,17 @@ export function Dashboard({ onLogout }: DashboardProps) {
           onClose={() => setShowCreateModal(false)}
           onCreate={handleBoardCreated}
         />
+      )}
+
+      {/* Admin Panel Button (Floating) */}
+      {isAdmin && (
+        <button
+          onClick={() => setShowAdminDashboard(true)}
+          className="fixed bottom-6 right-6 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 z-10"
+        >
+          <Shield className="w-5 h-5" />
+          <span>Panel de Admin</span>
+        </button>
       )}
     </div>
   );

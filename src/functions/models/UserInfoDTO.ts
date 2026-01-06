@@ -4,7 +4,8 @@ export interface UserInfo{
     nombre:string;
     correo:string;
     edad:number;
-    rol:string
+    rol:string;
+    fechaRegistro:string
 }
 
 

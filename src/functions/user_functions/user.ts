@@ -76,15 +76,16 @@ export async function RegisterUser(data:UserCreate) : Promise<UserInfo | void> {
 //METHOD TO GET ALL USERS
 export async function GetAllUsers() : Promise<UserInfo[] | void> {
     try{
-        const response=await api.get('/api/users/getAllUsers');
+        const response=await api.get<UserInfo[]>('/api/users/getAllUsers');
         console.log(response.data);
-        return response.data.map((item:any) => ({
+        /* return response.data.map((item:any) => ({
             _id: item._id,
             nombre: item.nombre,
             correo: item.correo,
             edad: item.edad,
             rol: item.rol
-        }));
+        })); */
+        return response.data;
     }catch(error:any){
         const statusCode = error.response?.status;
         if (statusCode === 500 || statusCode === 404) {
