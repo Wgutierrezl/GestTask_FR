@@ -25,6 +25,7 @@ export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /*
   const [selectedRole, setSelectedRole] = useState<'miembro' | 'invitado'>('miembro');
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [usersMembers,setUsersMembers]=useState<BoardMemberInfo[]>([]);
+  const [searchUsers,setSearchUsers]=useState<string>('');
 
   useEffect(()=> {
     const fetchUsers = async () => {
@@ -76,6 +77,10 @@ export function ManageMembersModal({ board, userRole ,currentUserId, onClose, /*
 
   const currentUserRole = userRole?.rol;
   const isOwner = currentUserRole === 'owner';
+  const filteredUsers = users.filter(user =>
+    user.nombre.toLowerCase().includes(searchUsers.toLowerCase()) ||
+    user.correo.toLowerCase().includes(searchUsers.toLowerCase())
+  );
 
   /* const availableUsers = users.filter(u => !boardMemberIds.includes(u.id)); */
 

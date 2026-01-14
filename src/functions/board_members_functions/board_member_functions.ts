@@ -22,6 +22,10 @@ export async function GetBoardsMemberByBoardId(boardId:string) : Promise<BoardMe
         }));
 
     }catch(error:any){
+        const statusCode=error.response?.status;
+        if(statusCode===404 || statusCode===400){
+            return [];
+        }
         Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
         return ;
     }
@@ -48,6 +52,10 @@ export async function GetMembersBoardByBoardIdToken(boardId:string) : Promise<Bo
         };
 
     }catch(error:any){
+        const statusCode=error.response?.status;
+        if(statusCode===404 || statusCode===400){
+            return void 0;
+        }
         Swal.fire('Error',`ha ocurrido un error inesperado ${error.message ?? error}`);
         return ;
     }
